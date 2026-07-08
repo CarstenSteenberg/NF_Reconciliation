@@ -1,0 +1,78 @@
+{
+  "id": "13dcd40b-4057-46d0-8b27-19d98943e11c",
+  "name": "NF_Reconciliation",
+  "publisher": "Steenberg Consulting",
+  "version": "1.0.0.01",
+  "brief": "",
+  "description": "",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "screenshots": [],
+  "platform": "1.0.0.0",
+  "application": "27.0.0.0",
+  "idRanges": [
+    {
+      "from": 50201,
+      "to": 50300
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": true,
+    "includeSourceInSymbolFile": true
+  },
+  "runtime": "17.0",
+  "features": [
+    "NoImplicitWith",
+    "TranslationFile"
+],
+  "dependencies": [
+    {
+      "id": "83461f48-dd16-49ea-b00c-e656830c640f",
+      "name": "Continia Banking",
+      "publisher": "Continia Software",
+      "version": "27.6.3.412852"
+    },
+    {
+      "id": "62235b56-656d-4e85-989b-fd47130bf4e5",
+      "name": "Continia Banking (DK)",
+      "publisher": "Continia Software",
+      "version": "27.6.3.412852"
+    },
+    {
+      "id": "7b7eefbe-0c7b-473d-83ae-398323510aa9",
+      "name": "Continia Banking - PSP",
+      "publisher": "Continia Software",
+      "version": "27.6.3.412852"
+    },
+    {
+      "id": "bbb72c8a-3abf-478f-9239-a34dbc252d07",
+      "name": "Continia Business Foundation",
+      "publisher": "Continia Software",
+      "version": "27.3.0.330477"
+    },
+    
+    {
+      "id": "ae290c18-bfc7-4260-b4d7-f36fa5655bfa",
+      "name": "Continia Banking - Export",
+      "publisher": "Continia Software",
+      "version": "27.6.3.412852"
+    },
+    
+    {
+      "id": "6da8dd2f-e698-461f-9147-8e404244dd85",
+      "name": "Continia Document Capture",
+      "publisher": "Continia Software",
+      "version": "27.3.1.382859"
+    },
+    {
+      "id": "07cfa45f-3c73-490e-8a85-e9f00d04676c",
+      "name": "Continia Approval",
+      "publisher": "Continia Software",
+      "version": "27.6.3.412852"
+    }
+  ]
+}
