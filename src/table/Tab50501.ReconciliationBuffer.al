@@ -1,4 +1,4 @@
-table 50202 "Reconciliation Buffer"
+table 50501 "Reconciliation Buffer"
 {
     DataClassification = ToBeClassified;
 

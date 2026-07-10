@@ -1,4 +1,4 @@
-codeunit 50201 "Reconciliation Generate Data"
+codeunit 50500 "Reconciliation Generate Data"
 {
     TableNo = "Reconciliation Parm Buffer";
     trigger OnRun()

@@ -1,4 +1,4 @@
-table 50201 "Reconciliation Parm Buffer"
+table 50500 "Reconciliation Parm Buffer"
 {
     DataClassification = ToBeClassified;
     DataPerCompany = false;
