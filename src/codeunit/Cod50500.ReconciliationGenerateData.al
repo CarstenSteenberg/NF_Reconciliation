@@ -138,7 +138,7 @@ codeunit 50500 "Reconciliation Generate Data"
                             BTReconGLOutboundEntry."External Document No." := GLEntry."External Document No.";
 
                         BTReconGLOutboundEntry."Currency Code" := GeneralLedgerSetup."LCY Code";
-                        BTReconGLOutboundEntry.g := GLEntry."Global Dimension 1 Code";
+                        BTReconGLOutboundEntry."Global Dimension 1 Code" := GLEntry."Global Dimension 1 Code";
 
                         IF BTReconGLOutboundEntry."Posting Date" > CALCDATE('<-CM-1D>', WorkDate()) THEN
                             BTReconGLOutboundEntry."Open Date" := BTReconGLOutboundEntry."Posting Date"
@@ -155,7 +155,7 @@ codeunit 50500 "Reconciliation Generate Data"
                 UNTIL GLEntry.Next() = 0;
             END;
         UNTIL GLAccount.Next() = 0;
-        //<NF> #3593734  Filudtrk til Blackline afstemning
+        //<NF> #3593734  Filudtræk til Blackline afstemning
     END;
 
     local procedure Extract_Open_Items(p_ReconParmBuffer: Record "Reconciliation Parm Buffer");
@@ -171,7 +171,7 @@ codeunit 50500 "Reconciliation Generate Data"
         i: Integer;
     BEGIN
         CLEAR(GLAccount);
-        GLAccount.SETRANGE("Blackline Not included", FALSE);
+        GLAccount.SETRANGE("Blackline, not included", FALSE);
         GLAccount.SETRANGE("Income/Balance", GLAccount."Income/Balance"::"Balance Sheet");
         GLAccount.SETRANGE("Blackline Item Reconciliation", GLAccount."Blackline Item Reconciliation"::Item);
         GLAccount.SETRANGE("Account Type", GLAccount."Account Type"::Posting);
@@ -592,7 +592,7 @@ codeunit 50500 "Reconciliation Generate Data"
     BEGIN
         CLEAR(GLAccount);
         GLAccount.SETRANGE("Account Type", GLAccount."Account Type"::Posting);
-        GLAccount.SETRANGE("Blackline Not included", FALSE);
+        GLAccount.SETRANGE("Blackline, not included", FALSE);
         GLAccount.SETRANGE("Income/Balance", GLAccount."Income/Balance"::"Balance Sheet");
         GLAccount.SETFILTER("Date Filter", '..%1', CALCDATE('<-CM-1D>', WORKDATE()));
 
@@ -624,7 +624,7 @@ codeunit 50500 "Reconciliation Generate Data"
             BTReconMasterOutbEntry.Balance := GLAccount."Balance at Date";
             BTReconMasterOutbEntry.Currency := GeneralLedgerSetup."LCY Code";
 
-            if GLAccount."Blackline Not included" then
+            if GLAccount."Blackline, not included" then
                 BTReconMasterOutbEntry."Active Account" := 'FALSE'
             else
                 BTReconMasterOutbEntry."Active Account" := 'TRUE';
