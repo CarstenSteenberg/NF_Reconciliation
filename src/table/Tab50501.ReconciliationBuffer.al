@@ -141,7 +141,7 @@ table 50501 "Reconciliation Buffer"
             Caption = 'Errors';
             Editable = false;
             FieldClass = FlowField;
-            //CalcFormula = exist("Error Log Entry" where("Table ID" = const(82115), "Error No." = field("Error Log No.")));
+            CalcFormula = exist("Error Log Entry" where("Table ID" = const(82115), "Error No." = field("Error Log No.")));
         }
         field(106; CompanyID; Code[20])
         {

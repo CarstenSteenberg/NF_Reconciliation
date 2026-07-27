@@ -30,6 +30,12 @@
       "name": "NF_Basic",
       "publisher": "Steenberg Consulting",
       "version": "1.0.0.0"
+    },
+    {
+      "id": "08c30661-ced3-4aca-8452-0d1c36eb15b1",
+      "name": "NF_Integration",
+      "publisher": "Steenberg Consulting",
+      "version": "1.0.0.0"
     }
   ]
 }

@@ -39,12 +39,5 @@ table 50500 "Reconciliation Parm Buffer"
         }
     }
 
-    /*
-    Converted from NAV C/AL table export.
 
-    Original documentation notes:
-    2022-06-15 #3593734 Filudtræk til Blackline afstemning NF11.00.1.227
-    2021-09-01 #2906058 BlackLine Performance NF11.00.1.195
-    2021-04-26 #2712146 Blackline integration setup and open item NF11.00.1.193
-    */
 }
