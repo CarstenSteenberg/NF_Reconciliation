@@ -712,9 +712,9 @@ codeunit 50500 "Reconciliation Generate Data"
                         BTReconGLOutboundEntry.Amount := GLEntry.Amount;
 
                         BTReconGLOutboundEntry."Foreign Currency Code" :=
-                            GLEntry."Currency Code";
+                            GLEntry."Source Currency Code";
                         BTReconGLOutboundEntry."Currency Amount" :=
-                            GLEntry."Currency Amount (System)";
+                            GLEntry."Source Currency Amount";
 
                         if (BTReconGLOutboundEntry."Foreign Currency Code" = '') or
                            (BTReconGLOutboundEntry."Foreign Currency Code" =
@@ -941,6 +941,7 @@ codeunit 50500 "Reconciliation Generate Data"
         EXIT;
     END;
 
+    /*
     local procedure Write_Debug_Info(p: Text[100]);
     var
         EntryBuffer: Record entry b;
@@ -954,6 +955,7 @@ codeunit 50500 "Reconciliation Generate Data"
         EntryBuffer.Description := p;
         EntryBuffer.Insert();
     END;
+    */
 
     procedure TempGLEntryDataGeneratedOK(var p_Filter_Rec: Record "Reconciliation Buffer"): Boolean;
     var
@@ -1191,12 +1193,11 @@ codeunit 50500 "Reconciliation Generate Data"
         HJ_GUID: GUID;
         GeneralLedgerSetup: Record "General Ledger Setup";
         BankAcc: Record "Bank Account";
-        BankPostingGroup: Record bank po;
+        BankPostingGroup: Record "Bank Account Posting Group";
     BEGIN
         HJ_DT := CURRENTDATETIME();
         HJ_GUID := CREATEGUID();
         WebServiceLog.InsertLog('WS Reconciliation BankAcc', HJ_GUID, HJ_DT, 1);
-        //Init_Execution();
         GeneralLedgerSetup.GET();
 
         CLEAR(BankAcc);
@@ -1231,7 +1232,7 @@ codeunit 50500 "Reconciliation Generate Data"
             ReconciliationBuffer."Entry No." := i;
             ReconciliationBuffer.CompanyID := CompanyName();
             IF BankPostingGroup.GET(BankAcc."Bank Acc. Posting Group") THEN
-                ReconciliationBuffer.GL_Account_No := BankPostingGroup."G/L Bank Account No.";
+                ReconciliationBuffer.GL_Account_No := BankPostingGroup."G/L Account No.";
 
             ReconciliationBuffer."Source No." := BankAcc."No.";
             ReconciliationBuffer.Description := BankAcc.Name;
@@ -1259,7 +1260,7 @@ codeunit 50500 "Reconciliation Generate Data"
 
     END;
 
-    procedure GetTempData(var rec: Record 82210 temporary);
+    procedure GetTempData(var rec: Record "Reconciliation Buffer" temporary);
     BEGIN
         ReconciliationBuffer.Reset();
         IF NOT ReconciliationBuffer.Findset() THEN
@@ -1273,7 +1274,7 @@ codeunit 50500 "Reconciliation Generate Data"
     local procedure Fill_Out_TempBlob(p_Filter: Text);
     BEGIN
         CLEAR(TempBlob);
-        TempBlob.Blob.CREATEOUTSTREAM(OutStr, TEXTENCODING::UTF8);
+        TempBlob.CREATEOUTSTREAM(OutStr, TEXTENCODING::UTF8);
         OutStr.WRITETEXT(FORMAT('Company...........: ' + CompanyName()) +
                          FORMAT(CR) + FORMAT(LF) +
                          FORMAT('Entry_Filters.....: ' + p_Filter) +
