@@ -1,6 +1,8 @@
 report 50500 "Reconciliation Generate Data"
 {
+    ApplicationArea = Basic, Suite;
     Caption = 'Reconciliation Generate Data';
+    UsageCategory = Tasks;
     ProcessingOnly = true;
 
     dataset
@@ -147,7 +149,8 @@ report 50500 "Reconciliation Generate Data"
 
     trigger OnInitReport()
     begin
-        if not CompanyId.CommonCompany then
+
+        if not CompanyId.IsCurrentCompanyCommon() then
             Error(JobMustRunInCommonErr);
     end;
 
