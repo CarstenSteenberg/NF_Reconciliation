@@ -405,7 +405,6 @@ report 50500 "Reconciliation Generate Data"
     local procedure CheckIfExecutedToday(BatchName: Text): Boolean
     var
         NordiskFilmSetup: Record "Nordisk Film Setup";
-        CalendarManagement: Codeunit 7600;
         Description: Text[50];
     begin
         if BatchName = '' then
@@ -414,7 +413,7 @@ report 50500 "Reconciliation Generate Data"
         if not NordiskFilmSetup.Get() then
             exit(false);
 
-        CalendarManagement.CheckDateStatus(NordiskFilmSetup."Reconciliation Calendar", WorkDate(), Description);
+        ReconciliationGenerateData.CheckDateStatus(NordiskFilmSetup."Reconciliation Calendar", WorkDate(), Description);
 
         exit(StrPos(UpperCase(Description), UpperCase(BatchName)) <> 0);
     end;
@@ -522,6 +521,7 @@ report 50500 "Reconciliation Generate Data"
     end;
 
     var
+        ReconciliationGenerateData: Codeunit "Reconciliation Generate Data";
         CompanyId: Record "Company Additional Setup";
         ReconciliationParmBuffer: Record "Reconciliation Parm Buffer";
         OpenItemsRP: Option Ignore,Incremental,Full;

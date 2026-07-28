@@ -1286,4 +1286,43 @@ codeunit 50500 "Reconciliation Generate Data"
                          FORMAT('Records returned..: ' + FORMAT(ReconciliationBuffer.Count())));
     END;
 
+    procedure CheckDateStatus(
+    CalendarCode: Code[10];
+    TargetDate: Date;
+    var Description: Text[50]): Boolean
+    var
+        BaseCalChange: Record "Base Calendar Change";
+    begin
+        BaseCalChange.Reset();
+        BaseCalChange.SetRange("Base Calendar Code", CalendarCode);
+
+        if BaseCalChange.FindSet() then
+            repeat
+                case BaseCalChange."Recurring System" of
+                    BaseCalChange."Recurring System"::" ":
+                        if TargetDate = BaseCalChange.Date then begin
+                            Description := BaseCalChange.Description;
+                            exit(BaseCalChange.Nonworking);
+                        end;
+
+                    BaseCalChange."Recurring System"::"Weekly Recurring":
+                        if Date2DWY(TargetDate, 1) = BaseCalChange.Day then begin
+                            Description := BaseCalChange.Description;
+                            exit(BaseCalChange.Nonworking);
+                        end;
+
+                    BaseCalChange."Recurring System"::"Annual Recurring":
+                        if (Date2DMY(TargetDate, 2) = Date2DMY(BaseCalChange.Date, 2)) and
+                           (Date2DMY(TargetDate, 1) = Date2DMY(BaseCalChange.Date, 1))
+                        then begin
+                            Description := BaseCalChange.Description;
+                            exit(BaseCalChange.Nonworking);
+                        end;
+                end;
+            until BaseCalChange.Next() = 0;
+
+        Description := '';
+        exit(false);
+    end;
+
 }
