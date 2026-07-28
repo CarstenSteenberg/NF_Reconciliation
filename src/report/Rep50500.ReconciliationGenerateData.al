@@ -11,9 +11,9 @@ report 50500 "Reconciliation Generate Data"
 
             trigger OnAfterGetRecord()
             var
-                AdditionalNordiskFilmSetup: Record 82130;
+                NordiskFilmSetup: Record "Nordisk Film Setup";
             begin
-                if not AdditionalNordiskFilmSetup.Get() then
+                if not NordiskFilmSetup.Get() then
                     exit;
 
                 Clear(BlankGuid);
@@ -44,11 +44,11 @@ report 50500 "Reconciliation Generate Data"
 
                 repeat
                     if GuiAllowed() then begin
-                        Window.Update(1, CompanyId.Company_Name);
+                        Window.Update(1, CompanyId."Company Name");
                         Window.Update(2, 'Generating data');
                     end;
 
-                    GenerateDataPerCompany(CompanyId.Company_Name);
+                    GenerateDataPerCompany(CompanyId."Company Name");
                 until CompanyId.Next() = 0;
 
                 GenerateDataOutboundFiles();
@@ -147,7 +147,7 @@ report 50500 "Reconciliation Generate Data"
 
     trigger OnInitReport()
     begin
-        if not CompanyId.IsCommon() then
+        if not CompanyId.CommonCompany then
             Error(JobMustRunInCommonErr);
     end;
 
@@ -335,24 +335,22 @@ report 50500 "Reconciliation Generate Data"
         until LocalReconciliationParmBuffer.Next() = 0;
     end;
 
-    local procedure GenerateDataOutboundOneFile(LocalReconciliationParmBuffer: Record 82191)
+    local procedure GenerateDataOutboundOneFile(LocalReconciliationParmBuffer: Record "Reconciliation Parm Buffer")
     var
         OutboundData: Record Outbound_Data;
-        TempBlob: Record 99008535 temporary;
-        BlackLineFileCreation: Codeunit 82280;
-        BTBizTalkService: Codeunit 82041;
+        TempBlob: Codeunit "Temp Blob";
+        TempInStream: InStream;
+        BlobOutStream: OutStream;
+        BlackLineFileCreation: Codeunit "BlackLine File Creation";
+        IntegrationService: Codeunit Integration_Service;
     begin
-        TempBlob.DeleteAll();
+        Clear(TempBlob);
         OutboundData.Init();
         OutboundData.MessageId := CreateGuid();
         OutboundData.MessageType := Format(LocalReconciliationParmBuffer."Extraction Type");
         OutboundData.Company := CompanyName();
         OutboundData.Insert_DateTime := CurrentDateTime();
         OutboundData.FileType := OutboundData.FileType::txt;
-
-        TempBlob.Init();
-        TempBlob."Primary Key" := 1;
-        TempBlob.Insert();
 
         case LocalReconciliationParmBuffer."Extraction Type" of
             LocalReconciliationParmBuffer."Extraction Type"::BlackLine_NF_BlackLine_Account_Items:
@@ -391,35 +389,32 @@ report 50500 "Reconciliation Generate Data"
                     LocalReconciliationParmBuffer."Extraction Type",
                     LocalReconciliationParmBuffer.GUID);
         end;
-
-        TempBlob.CalcFields(Blob);
-        if not TempBlob.Blob.HasValue() then
+        if not TempBlob.HasValue() then
             exit;
 
-        BTNAVOutboundData."XML Document" := TempBlob.Blob;
-        BTNAVOutboundData.Insert();
+        TempBlob.CreateInStream(TempInStream, TextEncoding::UTF8);
 
-        // <NF> #2947530 BlackLine - file transfer
-        BTBizTalkService.Add_BizTalkStatusLog(BTNAVOutboundData.GUID, 1, BTNAVOutboundData.Type, 1);
-        // </NF> #2947530 BlackLine - file transfer
+        OutboundData.Document.CreateOutStream(BlobOutStream);
+        CopyStream(BlobOutStream, TempInStream);
+
+        OutboundData.Insert();
+
+        IntegrationService.AddStatusLog(OutboundData.MessageId, enum::"Status Log Type"::Outbound, OutboundData.MessageType, 1);
     end;
 
     local procedure CheckIfExecutedToday(BatchName: Text): Boolean
     var
-        AdditionalNordiskFilmSetup: Record 82130;
+        NordiskFilmSetup: Record "Nordisk Film Setup";
         CalendarManagement: Codeunit 7600;
         Description: Text[50];
     begin
         if BatchName = '' then
             exit(false);
 
-        if not AdditionalNordiskFilmSetup.Get() then
+        if not NordiskFilmSetup.Get() then
             exit(false);
 
-        CalendarManagement.CheckDateStatus(
-            AdditionalNordiskFilmSetup."Reconciliation Calendar",
-            WorkDate(),
-            Description);
+        CalendarManagement.CheckDateStatus(NordiskFilmSetup."Reconciliation Calendar", WorkDate(), Description);
 
         exit(StrPos(UpperCase(Description), UpperCase(BatchName)) <> 0);
     end;
@@ -433,18 +428,12 @@ report 50500 "Reconciliation Generate Data"
             Window.Update(2, 'Clean up master data');
 
         BTReconMasterOutbEntry.SetCurrentKey("Export Date/Time", Type);
-        BTReconMasterOutbEntry.SetFilter(
-            Type,
-            '%1|%2',
-            BTReconMasterOutbEntry.Type::Bank,
-            BTReconMasterOutbEntry.Type::"G/L Account");
+        BTReconMasterOutbEntry.SetFilter(Type, '%1|%2', BTReconMasterOutbEntry.Type::Bank, BTReconMasterOutbEntry.Type::"G/L Account");
         BTReconMasterOutbEntry.DeleteAll();
 
         // <NF> #6231548 Blackline IC Partner files from NAV
         ReconciliationParmBuffer.SetRange(GUID, BatchGuid);
-        ReconciliationParmBuffer.SetRange(
-            "Extraction Type",
-            ReconciliationParmBuffer."Extraction Type"::BlackLine_Customer);
+        ReconciliationParmBuffer.SetRange("Extraction Type", ReconciliationParmBuffer."Extraction Type"::BlackLine_Customer);
         if ReconciliationParmBuffer.FindFirst() then
             case ReconciliationParmBuffer."Execution Mode" of
                 ReconciliationParmBuffer."Execution Mode"::Full:
@@ -455,9 +444,7 @@ report 50500 "Reconciliation Generate Data"
                 ReconciliationParmBuffer."Execution Mode"::Incremental:
                     begin
                         BTReconMasterOutbEntry.SetRange(Type, BTReconMasterOutbEntry.Type::Customer);
-                        BTReconMasterOutbEntry.SetRange(
-                            "Execution Mode",
-                            BTReconMasterOutbEntry."Execution Mode"::Incremental);
+                        BTReconMasterOutbEntry.SetRange("Execution Mode", BTReconMasterOutbEntry."Execution Mode"::Incremental);
                         if BTReconMasterOutbEntry.FindLast() then begin
                             LastBatchGuid := BTReconMasterOutbEntry.Batch_Guid;
                             BTReconMasterOutbEntry.SetFilter(Batch_Guid, '<>%1', LastBatchGuid);
@@ -465,9 +452,7 @@ report 50500 "Reconciliation Generate Data"
                         end;
 
                         BTReconMasterOutbEntry.SetRange(Type, BTReconMasterOutbEntry.Type::Customer);
-                        BTReconMasterOutbEntry.SetRange(
-                            "Execution Mode",
-                            BTReconMasterOutbEntry."Execution Mode"::Full);
+                        BTReconMasterOutbEntry.SetRange("Execution Mode", BTReconMasterOutbEntry."Execution Mode"::Full);
                         if BTReconMasterOutbEntry.FindLast() then begin
                             LastBatchGuid := BTReconMasterOutbEntry.Batch_Guid;
                             BTReconMasterOutbEntry.SetFilter(Batch_Guid, '<>%1', LastBatchGuid);
@@ -477,9 +462,7 @@ report 50500 "Reconciliation Generate Data"
             end;
 
         ReconciliationParmBuffer.SetRange(GUID, BatchGuid);
-        ReconciliationParmBuffer.SetRange(
-            "Extraction Type",
-            ReconciliationParmBuffer."Extraction Type"::BlackLine_Vendor);
+        ReconciliationParmBuffer.SetRange("Extraction Type", ReconciliationParmBuffer."Extraction Type"::BlackLine_Vendor);
         if ReconciliationParmBuffer.FindFirst() then
             case ReconciliationParmBuffer."Execution Mode" of
                 ReconciliationParmBuffer."Execution Mode"::Full:
@@ -500,9 +483,7 @@ report 50500 "Reconciliation Generate Data"
                         end;
 
                         BTReconMasterOutbEntry.SetRange(Type, BTReconMasterOutbEntry.Type::Vendor);
-                        BTReconMasterOutbEntry.SetRange(
-                            "Execution Mode",
-                            BTReconMasterOutbEntry."Execution Mode"::Full);
+                        BTReconMasterOutbEntry.SetRange("Execution Mode", BTReconMasterOutbEntry."Execution Mode"::Full);
                         if BTReconMasterOutbEntry.FindLast() then begin
                             LastBatchGuid := BTReconMasterOutbEntry.Batch_Guid;
                             BTReconMasterOutbEntry.SetFilter(Batch_Guid, '<>%1', LastBatchGuid);
@@ -522,32 +503,22 @@ report 50500 "Reconciliation Generate Data"
 
         Clear(BTReconGLOutboundEntry);
         BTReconGLOutboundEntry.SetCurrentKey("Extraction Type", "Execution Mode");
-        BTReconGLOutboundEntry.SetRange(
-            "Extraction Type",
-            BTReconGLOutboundEntry."Extraction Type"::BlackLine_IC_ACC,
+        BTReconGLOutboundEntry.SetRange("Extraction Type", BTReconGLOutboundEntry."Extraction Type"::BlackLine_IC_ACC,
             BTReconGLOutboundEntry."Extraction Type"::BlackLine_IC_PnL);
         BTReconGLOutboundEntry.DeleteAll();
 
         ReconciliationParmBuffer.SetRange(GUID, BatchGuid);
-        ReconciliationParmBuffer.SetRange(
-            "Extraction Type",
-            ReconciliationParmBuffer."Extraction Type"::BlackLine_NF_BlackLine_Account_Items);
-        ReconciliationParmBuffer.SetRange(
-            "Execution Mode",
-            ReconciliationParmBuffer."Execution Mode"::Full);
+        ReconciliationParmBuffer.SetRange("Extraction Type", ReconciliationParmBuffer."Extraction Type"::BlackLine_NF_BlackLine_Account_Items);
+        ReconciliationParmBuffer.SetRange("Execution Mode", ReconciliationParmBuffer."Execution Mode"::Full);
 
         // For a full load, delete all old data.
         if not ReconciliationParmBuffer.IsEmpty() then begin
-            BTReconGLOutboundEntry.SetRange(
-                "Extraction Type",
-                ReconciliationParmBuffer."Extraction Type"::BlackLine_NF_BlackLine_Account_Items);
+            BTReconGLOutboundEntry.SetRange("Extraction Type", ReconciliationParmBuffer."Extraction Type"::BlackLine_NF_BlackLine_Account_Items);
             BTReconGLOutboundEntry.DeleteAll();
         end;
 
         Sleep(15000);
 
-        // The original C/AL code exits here. Code below this point was unreachable
-        // and has therefore not been included as executable AL code.
     end;
 
     var
