@@ -21,13 +21,14 @@ report 50500 "Reconciliation Generate Data"
                 Clear(BlankGuid);
                 BatchGuid := CreateGuid();
 
-                Clear(CompanyId);
-                CompanyId.SetRange(ReconciliationCompany, true);
+                Clear(EnvironmentSetup);
+                EnvironmentSetup.SetRange(Environment, EnvironmentSetup.GetCurrentEnvironmentName());
+                EnvironmentSetup.SetRange(ReconciliationCompany, true);
 
                 // TEST
                 // CompanyId.SetRange(Company_Name, 'DK-NOH');
 
-                if not CompanyId.FindSet() then
+                if not EnvironmentSetup.FindSet() then
                     exit;
 
                 if GuiAllowed() then
@@ -46,12 +47,12 @@ report 50500 "Reconciliation Generate Data"
 
                 repeat
                     if GuiAllowed() then begin
-                        Window.Update(1, CompanyId."Company Name");
+                        Window.Update(1, EnvironmentSetup.Company);
                         Window.Update(2, 'Generating data');
                     end;
 
-                    GenerateDataPerCompany(CompanyId."Company Name");
-                until CompanyId.Next() = 0;
+                    GenerateDataPerCompany(EnvironmentSetup.Company);
+                until EnvironmentSetup.Next() = 0;
 
                 GenerateDataOutboundFiles();
 
@@ -150,7 +151,7 @@ report 50500 "Reconciliation Generate Data"
     trigger OnInitReport()
     begin
 
-        if not CompanyId.IsCurrentCompanyCommon() then
+        if not EnvironmentSetup.IsCurrentCompanyCommon() then
             Error(JobMustRunInCommonErr);
     end;
 
@@ -524,8 +525,8 @@ report 50500 "Reconciliation Generate Data"
     end;
 
     var
+        EnvironmentSetup: Record "Environment Setup";
         ReconciliationGenerateData: Codeunit "Reconciliation Generate Data";
-        CompanyId: Record "Company Additional Setup";
         ReconciliationParmBuffer: Record "Reconciliation Parm Buffer";
         OpenItemsRP: Option Ignore,Incremental,Full;
         CustomerRP: Option Ignore,Incremental,Full;
