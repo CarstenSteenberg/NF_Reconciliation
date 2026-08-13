@@ -1,0 +1,30 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Deploy ALL TEST",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\scripts\\Deploy-All-Sandboxes.ps1"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Deploy ALL PROD",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\scripts\\Deploy-PROD.ps1",
+                "${workspaceFolder}\\Steenberg Consulting_NF_Basic_1.0.0.0.app"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}
