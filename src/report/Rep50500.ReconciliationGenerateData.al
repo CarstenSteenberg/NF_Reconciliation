@@ -347,11 +347,13 @@ report 50500 "Reconciliation Generate Data"
         BlobOutStream: OutStream;
         BlackLineFileCreation: Codeunit "BlackLine File Creation";
         IntegrationService: Codeunit Integration_Service;
+        EnvironmentInformation: Codeunit "Environment Information";
     begin
         Clear(TempBlob);
         OutboundData.Init();
         OutboundData.MessageId := CreateGuid();
         OutboundData.MessageType := Format(LocalReconciliationParmBuffer."Extraction Type");
+        OutboundData.MessageType += '_' + CopyStr(EnvironmentInformation.GetEnvironmentName(), StrLen(EnvironmentInformation.GetEnvironmentName()) - 1, 2);
         OutboundData.Company := CompanyName();
         OutboundData.Insert_DateTime := CurrentDateTime();
         OutboundData.FileType := OutboundData.FileType::txt;
