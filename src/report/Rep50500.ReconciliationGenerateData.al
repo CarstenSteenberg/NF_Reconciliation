@@ -354,6 +354,9 @@ report 50500 "Reconciliation Generate Data"
         OutboundData.MessageId := CreateGuid();
         OutboundData.MessageType := Format(LocalReconciliationParmBuffer."Extraction Type");
         OutboundData.MessageType += '_' + CopyStr(EnvironmentInformation.GetEnvironmentName(), StrLen(EnvironmentInformation.GetEnvironmentName()) - 1, 2);
+        OutboundData."Data Source Type" := 'BlackLine';
+        OutboundData."Data Source Code" := OutboundData.MessageType;
+
         OutboundData.Company := CompanyName();
         OutboundData.Insert_DateTime := CurrentDateTime();
         OutboundData.FileType := OutboundData.FileType::txt;
