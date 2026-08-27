@@ -406,9 +406,9 @@ report 50500 "Reconciliation Generate Data"
         OutboundData.Document.CreateOutStream(BlobOutStream);
         CopyStream(BlobOutStream, TempInStream);
 
-        OutboundData.Insert();
+        OutboundData.Insert(true);
 
-        IntegrationService.AddStatusLog(OutboundData.MessageId, enum::"Status Log Type"::Outbound, OutboundData.MessageType, 1);
+        IntegrationService.AddStatusLog(OutboundData.MessageId, enum::"Status Log Type"::Outbound, OutboundData.MessageType, enum::IntegrationStatus::Released);
     end;
 
     local procedure CheckIfExecutedToday(BatchName: Text): Boolean
