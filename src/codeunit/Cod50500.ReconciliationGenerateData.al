@@ -67,7 +67,7 @@ codeunit 50500 "Reconciliation Generate Data"
         i: Integer;
     BEGIN
         CLEAR(GLAccount);
-        GLAccount.SETRANGE("Blackline Match", TRUE);
+        //GLAccount.SETRANGE("Blackline Match", TRUE);
         IF NOT GLAccount.Findset() THEN
             EXIT;
 
@@ -171,9 +171,9 @@ codeunit 50500 "Reconciliation Generate Data"
         i: Integer;
     BEGIN
         CLEAR(GLAccount);
-        GLAccount.SETRANGE("Blackline, not included", FALSE);
+        GLAccount.SETRANGE(reconciliation, TRUE);
         GLAccount.SETRANGE("Income/Balance", GLAccount."Income/Balance"::"Balance Sheet");
-        GLAccount.SETRANGE("Blackline Item Reconciliation", GLAccount."Blackline Item Reconciliation"::Item);
+        GLAccount.SETRANGE(reconciliationopenitems, TRUE);
         GLAccount.SETRANGE("Account Type", GLAccount."Account Type"::Posting);
 
         //TEST
@@ -592,7 +592,7 @@ codeunit 50500 "Reconciliation Generate Data"
     BEGIN
         CLEAR(GLAccount);
         GLAccount.SETRANGE("Account Type", GLAccount."Account Type"::Posting);
-        GLAccount.SETRANGE("Blackline, not included", FALSE);
+        GLAccount.SETRANGE(reconciliation, TRUE);
         GLAccount.SETRANGE("Income/Balance", GLAccount."Income/Balance"::"Balance Sheet");
         GLAccount.SETFILTER("Date Filter", '..%1', CALCDATE('<-CM-1D>', WORKDATE()));
 
@@ -624,7 +624,7 @@ codeunit 50500 "Reconciliation Generate Data"
             BTReconMasterOutbEntry.Balance := GLAccount."Balance at Date";
             BTReconMasterOutbEntry.Currency := GeneralLedgerSetup."LCY Code";
 
-            if GLAccount."Blackline, not included" then
+            if GLAccount.reconciliation = FALSE then
                 BTReconMasterOutbEntry."Active Account" := 'FALSE'
             else
                 BTReconMasterOutbEntry."Active Account" := 'TRUE';
@@ -979,7 +979,7 @@ codeunit 50500 "Reconciliation Generate Data"
         CLEAR(GLAccount);
         //GLAccount.SETRANGE("Blackline Not included", FALSE);
         GLAccount.SETRANGE("Income/Balance", GLAccount."Income/Balance"::"Balance Sheet");
-        GLAccount.SETRANGE("Blackline Item Reconciliation", GLAccount."Blackline Item Reconciliation"::Item);
+        GLAccount.SETRANGE(ReconciliationOpenItems, TRUE);
         GLAccount.SETRANGE("Account Type", GLAccount."Account Type"::Posting);
 
         l_DateFilter := DELCHR(p_Filter_Rec.GETFILTER(DateFilter), '=', '''');
