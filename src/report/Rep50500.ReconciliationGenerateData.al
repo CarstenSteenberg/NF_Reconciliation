@@ -151,8 +151,8 @@ report 50500 "Reconciliation Generate Data"
     trigger OnInitReport()
     begin
 
-        if not EnvironmentSetup.IsCurrentCompanyCommon() then
-            Error(JobMustRunInCommonErr);
+        if not EnvironmentSetup.IsCurrentCompanyMain() then
+            Error(JobMustRunInMainErr);
     end;
 
     local procedure GenerateDataPerCompany(CompanyName: Text[30])
@@ -548,7 +548,7 @@ report 50500 "Reconciliation Generate Data"
         BlankGuid: Guid;
         BatchGuid: Guid;
         Window: Dialog;
-        JobMustRunInCommonErr: Label 'This job must be executed in COMMON';
+        JobMustRunInMainErr: Label 'This job must be executed in MAIN';
         JobDidNotExecuteErr: Label 'The job did not execute in %1', Comment = '%1 = company name';
         BatchInfoLbl: Label 'Company.: #######1##########\Process.: ##########2##########';
 }
