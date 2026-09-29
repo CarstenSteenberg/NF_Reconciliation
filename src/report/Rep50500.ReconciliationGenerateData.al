@@ -408,7 +408,7 @@ report 50500 "Reconciliation Generate Data"
 
         OutboundData.Insert(true);
 
-        IntegrationService.AddStatusLog(OutboundData.MessageId, enum::"Status Log Type"::Outbound, DataIsBeingProcessedLbl, enum::IntegrationStatus::Open);
+        //IntegrationService.AddStatusLog(OutboundData.MessageId, enum::"Status Log Type"::Outbound, DataIsBeingProcessedLbl, enum::IntegrationStatus::Open);
     end;
 
     local procedure CheckIfExecutedToday(BatchName: Text): Boolean
