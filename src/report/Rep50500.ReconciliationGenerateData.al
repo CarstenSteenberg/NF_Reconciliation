@@ -408,7 +408,7 @@ report 50500 "Reconciliation Generate Data"
 
         OutboundData.Insert(true);
 
-        IntegrationService.AddStatusLog(OutboundData.MessageId, enum::"Status Log Type"::Outbound, OutboundData.MessageType, enum::IntegrationStatus::Released);
+        IntegrationService.AddStatusLog(OutboundData.MessageId, enum::"Status Log Type"::Outbound, DataIsBeingProcessedLbl, enum::IntegrationStatus::Open);
     end;
 
     local procedure CheckIfExecutedToday(BatchName: Text): Boolean
@@ -548,6 +548,8 @@ report 50500 "Reconciliation Generate Data"
         BlankGuid: Guid;
         BatchGuid: Guid;
         Window: Dialog;
+
+        DataIsBeingProcessedLbl: Label 'Data is being processed';
         JobMustRunInMainErr: Label 'This job must be executed in MAIN';
         JobDidNotExecuteErr: Label 'The job did not execute in %1', Comment = '%1 = company name';
         BatchInfoLbl: Label 'Company.: #######1##########\Process.: ##########2##########';
