@@ -23,7 +23,7 @@ report 50500 "Reconciliation Generate Data"
 
                 Clear(EnvironmentSetup);
                 EnvironmentSetup.SetRange(Environment, EnvironmentSetup.GetCurrentEnvironmentName());
-                EnvironmentSetup.SetRange(ReconciliationCompany, true);
+                EnvironmentSetup.SetRange(EPMCompany, true);
 
                 // TEST
                 // CompanyId.SetRange(Company_Name, 'DK-NOH');
