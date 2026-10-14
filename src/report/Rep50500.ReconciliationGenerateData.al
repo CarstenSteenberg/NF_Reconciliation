@@ -75,16 +75,19 @@ report 50500 "Reconciliation Generate Data"
                 {
                     Caption = 'Options';
 
+                    /*
                     field(OpenItems; OpenItemsRP)
                     {
                         ApplicationArea = Basic, Suite;
                         Caption = 'Open Items';
                     }
+                    */
 
                     group(MasterData)
                     {
                         Caption = 'Master data';
 
+                        /*
                         field(Customer; CustomerRP)
                         {
                             ApplicationArea = All;
@@ -105,6 +108,7 @@ report 50500 "Reconciliation Generate Data"
                             ApplicationArea = All;
                             Caption = 'G/L Account';
                         }
+                        */
                         field(ICACC; ICACCRP)
                         {
                             ApplicationArea = All;
