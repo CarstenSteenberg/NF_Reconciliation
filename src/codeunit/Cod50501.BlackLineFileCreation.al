@@ -329,7 +329,7 @@ codeunit 50501 "BlackLine File Creation"
                               FORMAT(ReconGLOutboundEntry."IC Partner Code") + FORMAT(TAB) +
                               FORMAT(ReconGLOutboundEntry.Closed) + FORMAT(TAB) +
                               FORMAT(TAB) + //Closed Date
-                              FORMAT(COPYSTR(ReconGLOutboundEntry.CompanyID, 4, 3) + '-' + FORMAT(FileType) + '-' + FORMAT(ReconGLOutboundEntry."G/L Entry No.")) +
+                              FORMAT('BC-' + COPYSTR(ReconGLOutboundEntry.CompanyID, 4, 3) + '-' + FORMAT(FileType) + '-' + FORMAT(ReconGLOutboundEntry."G/L Entry No.")) +
                               FORMAT(CR) + FORMAT(LF));
         until ReconGLOutboundEntry.NEXT = 0;
     end;
