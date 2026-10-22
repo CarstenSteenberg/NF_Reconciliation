@@ -1,0 +1,2 @@
+# Exclude Business Central configuration with secrets
+**/BC-Config.ps1

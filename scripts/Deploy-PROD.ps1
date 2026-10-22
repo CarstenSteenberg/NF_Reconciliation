@@ -1,267 +1,249 @@
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-#
 # ============================================================
-# NF_Basic - Deploy to all PROD environments
+# Load shared configuration
 # ============================================================
-#
+$ConfigFile = Join-Path $PSScriptRoot 'BC-Config.ps1'
+if (-not (Test-Path -LiteralPath $ConfigFile -PathType Leaf)) {
+    throw "Configuration file not found: $ConfigFile"
+}
+. $ConfigFile
 
-$ProjectFolder = Split-Path $PSScriptRoot -Parent
-
-#
-# Authentication
-#
-$TenantId = "7b6a9158-8e4c-47d1-bed4-a2e25046dda1"
-$ClientId = "82828c4f-5454-4739-9e27-2f36883324b2"
-$ClientSecret = "hgo8Q~ZzyFJylpRAhjZ6WESqHX5jk2ami2NnnakN"
-
-#
-# Client Secret is stored as Windows User Environment Variable:
-# BC_CLIENT_SECRET
-#
-
-if ([string]::IsNullOrWhiteSpace($ClientSecret)) {
-    throw "BC_CLIENT_SECRET environment variable is not configured."
+if ([string]::IsNullOrWhiteSpace($TenantId)) { throw 'TenantId is missing in BC-Config.ps1.' }
+if ([string]::IsNullOrWhiteSpace($ClientId)) { throw 'ClientId is missing in BC-Config.ps1.' }
+if ([string]::IsNullOrWhiteSpace($ClientSecret)) { throw 'ClientSecret is missing in BC-Config.ps1.' }
+if (-not $ProdEnvironments -or @($ProdEnvironments).Count -eq 0) {
+    throw 'ProdEnvironments is missing in BC-Config.ps1.'
 }
 
-#
-# Production environments
-#
-$Environments = @(
-    "PROD_NordiskFilm_DK",
-    "PROD_NordiskFilm_SE",
-    "PROD_NordiskFilm_NO",
-    "PROD_NordiskFilm_FI"
-)
-
-Write-Host ""
-Write-Host "======================================================"
-Write-Host " NF_Basic - Deploy to all PROD environments"
-Write-Host "======================================================"
-Write-Host ""
-
-#
-# ============================================================
-# Find app.json
-# ============================================================
-#
-
-$AppJsonPath = Join-Path $ProjectFolder "app.json"
-
-if (-not (Test-Path $AppJsonPath)) {
-    throw "app.json not found: $AppJsonPath"
-}
-
-$AppJson = Get-Content $AppJsonPath -Raw | ConvertFrom-Json
-
-Write-Host "Application : $($AppJson.name)"
-Write-Host "Publisher   : $($AppJson.publisher)"
-Write-Host "Version     : $($AppJson.version)"
-Write-Host ""
-
-#
-# ============================================================
-# Increment version
-#
-# Example:
-# 1.0.0.7 -> 1.0.0.8
-# ============================================================
-#
-
-$CurrentVersion = [version]$AppJson.version
-
-$NewVersion = [version]::new(
-    $CurrentVersion.Major,
-    $CurrentVersion.Minor,
-    $CurrentVersion.Build,
-    $CurrentVersion.Revision + 1
-)
-
-$AppJson.version = $NewVersion.ToString()
-
-$AppJson |
-    ConvertTo-Json -Depth 100 |
-    Set-Content $AppJsonPath -Encoding UTF8
-
-Write-Host "======================================================"
-Write-Host " Version changed"
-Write-Host "======================================================"
-Write-Host ""
-Write-Host "$CurrentVersion -> $NewVersion"
-Write-Host ""
-
-#
-# ============================================================
-# Find Microsoft AL Language extension
-# ============================================================
-#
-
-$ALExtension = Get-ChildItem `
-    "$env:USERPROFILE\.vscode\extensions" `
-    -Directory `
-    -Filter "ms-dynamics-smb.al-*" |
-    Sort-Object Name -Descending |
-    Select-Object -First 1
-
-if ($null -eq $ALExtension) {
-    throw "Microsoft AL Language extension was not found."
-}
-
-Write-Host "AL extension:"
-Write-Host $ALExtension.FullName
-Write-Host ""
-
-#
-# ============================================================
-# Find AL compiler (alc.exe)
-# ============================================================
-#
-
-$ALCompiler = Get-ChildItem `
-    $ALExtension.FullName `
-    -Recurse `
-    -Filter "alc.exe" `
-    -ErrorAction SilentlyContinue |
-    Select-Object -First 1
-
-if ($null -eq $ALCompiler) {
-    throw "alc.exe was not found in the AL Language extension."
-}
-
-Write-Host "AL compiler:"
-Write-Host $ALCompiler.FullName
-Write-Host ""
-
-#
-# ============================================================
-# Package cache
-# ============================================================
-#
-
-$PackageCache = Join-Path $ProjectFolder ".alpackages"
-
-if (-not (Test-Path $PackageCache)) {
-    throw ".alpackages folder not found: $PackageCache"
-}
-
-#
-# ============================================================
-# Determine new APP filename
-# ============================================================
-#
-
-$AppFileName =
-    "$($AppJson.publisher)_$($AppJson.name)_$NewVersion.app"
-
-$AppFile = Join-Path $ProjectFolder $AppFileName
-
-Write-Host "New APP package:"
-Write-Host $AppFile
-Write-Host ""
-
-#
-# Remove existing package with same filename if present
-#
-if (Test-Path $AppFile) {
-
-    Write-Host "Removing existing package:"
-    Write-Host $AppFile
-
-    Remove-Item $AppFile -Force
-
-    Write-Host ""
-}
-
-#
-# ============================================================
-# Compile current AL source
-# ============================================================
-#
-
-Write-Host "======================================================"
-Write-Host " Compiling NF_Basic $NewVersion"
-Write-Host "======================================================"
-Write-Host ""
-
-& $ALCompiler.FullName `
-    "/project:$ProjectFolder" `
-    "/packagecachepath:$PackageCache" `
-    "/out:$AppFile"
-
-if ($LASTEXITCODE -ne 0) {
-    throw "AL compilation failed."
-}
-
-if (-not (Test-Path $AppFile)) {
-    throw "Compilation completed but APP file was not created: $AppFile"
-}
-
-Write-Host ""
-Write-Host "Compilation successful."
-Write-Host ""
-Write-Host "Package:"
-Write-Host $AppFile
-Write-Host ""
-
-#
-# ============================================================
-# Show deployment information
-# ============================================================
-#
-
-Write-Host "======================================================"
-Write-Host " READY FOR PRODUCTION DEPLOYMENT"
-Write-Host "======================================================"
-Write-Host ""
-Write-Host "Application : $($AppJson.name)"
-Write-Host "Publisher   : $($AppJson.publisher)"
-Write-Host "Old version : $CurrentVersion"
-Write-Host "New version : $NewVersion"
-Write-Host ""
-Write-Host "Environments:"
-Write-Host ""
-
-foreach ($Environment in $Environments) {
-    Write-Host "  $Environment"
-}
-
-Write-Host ""
-Write-Host "======================================================"
-Write-Host " Starting production deployment"
-Write-Host "======================================================"
-Write-Host ""
-
-#
-# ============================================================
-# Deploy using existing Deploy-BC.ps1
-# ============================================================
-#
-
-& "$PSScriptRoot\Deploy-BC.ps1" `
-    -AppFile $AppFile `
-    -TenantId $TenantId `
-    -ClientId $ClientId `
-    -ClientSecret $ClientSecret `
-    -Environments $Environments `
-    -SchemaSyncMode "Add"
-
-#
-# Check whether Deploy-BC.ps1 failed
-#
-if ($LASTEXITCODE -ne 0) {
-    throw "Production deployment failed."
-}
-
-#
-# Clear secret from current PowerShell variable
-#
+# Deploy-BC-Admin.ps1 reads the secret from the process environment.
+$env:BC_CLIENT_SECRET = $ClientSecret
 $ClientSecret = $null
 
-Write-Host ""
-Write-Host "======================================================"
-Write-Host " PROD deployment completed successfully"
-Write-Host "======================================================"
-Write-Host ""
-Write-Host "Application : $($AppJson.name)"
-Write-Host "Version     : $NewVersion"
-Write-Host ""
+try {
+    # ============================================================
+    # Initialization and app.json (before creating the dialog)
+    # ============================================================
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $ProjectFolder = Split-Path $PSScriptRoot -Parent
+    $names = @($ProdEnvironments)
+    $appJsonPath = Join-Path $ProjectFolder 'app.json'
+
+    if (-not (Test-Path -LiteralPath $appJsonPath -PathType Leaf)) {
+        throw "Missing $appJsonPath"
+    }
+
+    $appJson = Get-Content -LiteralPath $appJsonPath -Raw | ConvertFrom-Json
+    if ([string]::IsNullOrWhiteSpace($appJson.name)) {
+        throw "App name is missing in $appJsonPath"
+    }
+    $appName = [string]$appJson.name
+
+    # ============================================================
+    # Select PROD environments
+    # ============================================================
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = "$appName - PROD deployment (Admin API)"
+    $form.Size = New-Object System.Drawing.Size(485,370)
+    $form.StartPosition = 'CenterScreen'
+    $form.FormBorderStyle = 'FixedDialog'
+    $form.MaximizeBox = $false
+    $form.MinimizeBox = $false
+
+    $label = New-Object System.Windows.Forms.Label
+    $label.Text = 'Select production environments:'
+    $label.SetBounds(20,15,400,25)
+    $form.Controls.Add($label)
+
+    $list = New-Object System.Windows.Forms.CheckedListBox
+    $list.SetBounds(20,45,430,125)
+    $list.CheckOnClick = $true
+    foreach ($name in $names) {
+        [void]$list.Items.Add($name,$true)
+    }
+    $form.Controls.Add($list)
+
+    # ============================================================
+    # Deployment mode
+    # ============================================================
+    $compile = New-Object System.Windows.Forms.RadioButton
+    $compile.Text = 'Increment version, compile and deploy'
+    $compile.SetBounds(20,185,430,25)
+    $compile.Checked = $true
+    $form.Controls.Add($compile)
+
+    $reuse = New-Object System.Windows.Forms.RadioButton
+    $reuse.Text = 'Deploy existing APP'
+    $reuse.SetBounds(20,215,430,25)
+    $form.Controls.Add($reuse)
+
+    # ============================================================
+    # Buttons
+    # ============================================================
+    $ok = New-Object System.Windows.Forms.Button
+    $ok.Text = 'Deploy'
+    $ok.SetBounds(245,270,95,32)
+    $ok.DialogResult = 'OK'
+    $form.Controls.Add($ok)
+    $form.AcceptButton = $ok
+
+    $cancel = New-Object System.Windows.Forms.Button
+    $cancel.Text = 'Cancel'
+    $cancel.SetBounds(350,270,95,32)
+    $cancel.DialogResult = 'Cancel'
+    $form.Controls.Add($cancel)
+    $form.CancelButton = $cancel
+
+    # ============================================================
+    # Show dialog
+    # ============================================================
+    try {
+        if ($form.ShowDialog() -ne 'OK') {
+            Write-Host 'Deployment cancelled.'
+            return
+        }
+        $environments = @($list.CheckedItems | ForEach-Object { [string]$_ })
+        $useExisting = $reuse.Checked
+    }
+    finally {
+        $form.Dispose()
+    }
+
+    if ($environments.Count -eq 0) { throw 'No environments selected.' }
+
+    Write-Host ''
+    Write-Host '=========================================='
+    Write-Host " $appName - PROD Deployment"
+    Write-Host '=========================================='
+    Write-Host "Application : $appName"
+    Write-Host "Publisher   : $($appJson.publisher)"
+    Write-Host "Version     : $($appJson.version)"
+    Write-Host ''
+
+    # ============================================================
+    # Select existing APP or compile new version
+    # ============================================================
+    if ($useExisting) {
+        $dialog = New-Object System.Windows.Forms.OpenFileDialog
+        $dialog.Filter = 'Business Central APP (*.app)|*.app'
+        $dialog.InitialDirectory = $ProjectFolder
+        $dialog.CheckFileExists = $true
+
+        if ($dialog.ShowDialog() -ne 'OK') {
+            Write-Host 'Deployment cancelled.'
+            return
+        }
+        $appFile = $dialog.FileName
+        Write-Host "Using existing APP: $appFile"
+    }
+    else {
+        $originalJson = [IO.File]::ReadAllText($appJsonPath)
+        $oldVersion = [version]$appJson.version
+        $newVersion = [version]::new(
+            $oldVersion.Major,
+            $oldVersion.Minor,
+            $oldVersion.Build,
+            $oldVersion.Revision + 1
+        )
+        $appJson.version = $newVersion.ToString()
+        Write-Host "Version: $oldVersion -> $newVersion"
+
+        $extensions = Get-ChildItem `
+            "$env:USERPROFILE\.vscode\extensions" `
+            -Directory `
+            -Filter 'ms-dynamics-smb.al-*' |
+            Sort-Object Name -Descending
+
+        $compiler = $extensions |
+            ForEach-Object {
+                Get-ChildItem $_.FullName `
+                    -Recurse `
+                    -Filter 'alc.exe' `
+                    -ErrorAction SilentlyContinue
+            } |
+            Select-Object -First 1
+
+        if (-not $compiler) { throw 'AL compiler not found.' }
+
+        $cache = Join-Path $ProjectFolder '.alpackages'
+        if (-not (Test-Path $cache)) { throw '.alpackages not found.' }
+
+        $appFile = Join-Path $ProjectFolder `
+            "$($appJson.publisher)_$appName`_$newVersion.app"
+
+        if (Test-Path -LiteralPath $appFile) {
+            throw "Package already exists: $appFile"
+        }
+
+        try {
+            $appJson |
+                ConvertTo-Json -Depth 100 |
+                Set-Content -LiteralPath $appJsonPath -Encoding UTF8
+
+            Write-Host "Compiling $appName $newVersion..."
+            & $compiler.FullName `
+                "/project:$ProjectFolder" `
+                "/packagecachepath:$cache" `
+                "/out:$appFile"
+
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $appFile)) {
+                throw 'AL compilation failed.'
+            }
+            Write-Host "Compilation successful: $appFile"
+        }
+        catch {
+            [IO.File]::WriteAllText(
+                $appJsonPath,
+                $originalJson,
+                [Text.UTF8Encoding]::new($false)
+            )
+            throw
+        }
+    }
+
+    # ============================================================
+    # Confirm PROD deployment
+    # ============================================================
+    $confirmation = [System.Windows.Forms.MessageBox]::Show(
+        "Application: $appName`r`nAPP: $appFile`r`n`r`nTargets:`r`n$($environments -join "`r`n")`r`n`r`nDeploy using Admin Center API?",
+        "Confirm $appName PROD deployment",
+        'YesNo',
+        'Warning'
+    )
+
+    if ($confirmation -ne 'Yes') {
+        Write-Host 'Cancelled before upload.'
+        return
+    }
+
+    # ============================================================
+    # Deploy using Admin Center API
+    # ============================================================
+    try {
+        & (Join-Path $PSScriptRoot 'Deploy-BC-Admin.ps1') `
+            -AppFile $appFile `
+            -TenantId $TenantId `
+            -ClientId $ClientId `
+            -Environments $environments `
+            -SchemaSyncMode $SchemaSyncMode `
+            -TimeoutMinutes $TimeoutMinutes `
+            -PollSeconds $PollSeconds `
+            -ErrorAction Stop
+
+        Write-Host ''
+        Write-Host '=========================================='
+        Write-Host " $appName - PROD deployment completed successfully"
+        Write-Host '=========================================='
+    }
+    catch {
+        Write-Host ''
+        Write-Host "PROD deployment failed for $appName`:" -ForegroundColor Red
+        Write-Host $_.Exception.Message -ForegroundColor Red
+        throw
+    }
+}
+finally {
+    Remove-Item Env:\BC_CLIENT_SECRET -ErrorAction SilentlyContinue
+}

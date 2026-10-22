@@ -1,11 +1,13 @@
+
 {
     "version": "2.0.0",
     "tasks": [
         {
             "label": "Deploy ALL TEST",
             "type": "shell",
-            "command": "powershell",
+            "command": "powershell.exe",
             "args": [
+                "-NoProfile",
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
@@ -16,15 +18,21 @@
         {
             "label": "Deploy ALL PROD",
             "type": "shell",
-            "command": "powershell",
+            "command": "powershell.exe",
             "args": [
+                "-NoProfile",
+                "-STA",
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                "${workspaceFolder}\\scripts\\Deploy-PROD.ps1",
-                "${workspaceFolder}\\Steenberg Consulting_NF_Basic_1.0.0.0.app"
+                "${workspaceFolder}\\scripts\\Deploy-PROD.ps1"
             ],
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            }
         }
     ]
 }
