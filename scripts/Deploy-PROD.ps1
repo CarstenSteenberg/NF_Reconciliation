@@ -1,5 +1,23 @@
 $ErrorActionPreference = 'Stop'
 
+# SECURITY: PROD deployment is only allowed from MAIN
+# ============================================================
+$ProjectFolder = Split-Path -Parent $PSScriptRoot
+
+$Branch = git -C $ProjectFolder branch --show-current
+
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($Branch)) {
+    throw "Unable to determine the current Git branch."
+}
+
+$Branch = $Branch.Trim()
+
+if ($Branch -ne 'main') {
+    throw "PROD deployment is blocked! Current branch: '$Branch'. Only 'main' is allowed."
+}
+
+Write-Host "Git branch verified: $Branch" -ForegroundColor Green
+
 # ============================================================
 # Load shared configuration
 # ============================================================
@@ -29,6 +47,13 @@ try {
 
     $ProjectFolder = Split-Path $PSScriptRoot -Parent
     $names = @($ProdEnvironments)
+    
+    # Ensure only PROD environments are selected
+    foreach ($name in $names) {
+        if ($name -notlike 'PROD_*') {
+            throw "Invalid PROD environment: $name"
+        }
+    }
     $appJsonPath = Join-Path $ProjectFolder 'app.json'
 
     if (-not (Test-Path -LiteralPath $appJsonPath -PathType Leaf)) {

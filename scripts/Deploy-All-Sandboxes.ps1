@@ -12,6 +12,28 @@ if (-not (Test-Path -LiteralPath $ConfigFile -PathType Leaf)) {
 . $ConfigFile
 
 $ProjectFolder = Split-Path -Path $PSScriptRoot -Parent
+# ============================================================
+# Git branch safety check - TEST requires develop
+# ============================================================
+$CurrentBranch = (& git -C $ProjectFolder branch --show-current).Trim()
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to determine Git branch."
+}
+
+if ($CurrentBranch -ne 'develop') {
+    throw @"
+DEPLOYMENT BLOCKED!
+
+Current branch : $CurrentBranch
+Required branch: develop
+
+TEST deployment is only allowed from develop.
+"@
+}
+
+Write-Host "Git branch verified: $CurrentBranch" -ForegroundColor Green
+
 $Environments = @($TestEnvironments)
 
 if ([string]::IsNullOrWhiteSpace($TenantId)) {
