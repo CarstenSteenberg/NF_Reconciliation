@@ -426,7 +426,8 @@ report 50500 "Reconciliation Generate Data"
         if not NordiskFilmSetup.Get() then
             exit(false);
 
-        ReconciliationGenerateData.CheckDateStatus(NordiskFilmSetup."Reconciliation Calendar", WorkDate(), Description);
+        //ReconciliationGenerateData.CheckDateStatus(NordiskFilmSetup."Reconciliation Calendar", WorkDate(), Description);
+        ReconciliationGenerateData.CheckDateStatus(NordiskFilmSetup."Base Calendar", WorkDate(), Description);
 
         exit(StrPos(UpperCase(Description), UpperCase(BatchName)) <> 0);
     end;
