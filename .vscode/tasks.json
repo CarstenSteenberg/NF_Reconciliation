@@ -78,6 +78,22 @@
         "clear": true,
         "close": false
     }
+},
+
+{
+    "label": "Compare AL MAIN vs DEVELOP",
+    "type": "process",
+    "command": "powershell.exe",
+    "args": [
+        "-NoProfile",
+        "-STA",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\scripts\\Compare-ALBranches.ps1"
+    ],
+    "problemMatcher": []
 }
+
     ]
 }
