@@ -3,19 +3,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Deploy ALL TEST",
-            "type": "shell",
-            "command": "powershell.exe",
-            "args": [
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "${workspaceFolder}\\scripts\\Deploy-All-Sandboxes.ps1"
-            ],
-            "problemMatcher": []
-        },
-        {
             "label": "Deploy ALL PROD",
             "type": "shell",
             "command": "powershell.exe",
