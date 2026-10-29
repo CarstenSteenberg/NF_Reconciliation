@@ -819,7 +819,7 @@ codeunit 50500 "Reconciliation Generate Data"
     BEGIN
         //<NF> #6231548  Blackline IC Partner filer fra NAV
         CLEAR(GLAccount);
-        GLAccount.SETFILTER("No.", '821010|843020|843022|924010|924020|935210|935220|935112');
+        GLAccount.SETFILTER("No.", '821010|843020|843022|848015|924010|924020|935210|935220|935112|947015');
         Extract_IC(p_ReconParmBuffer, GLAccount);
 
     END;
