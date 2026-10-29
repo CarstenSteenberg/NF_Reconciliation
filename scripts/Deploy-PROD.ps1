@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 # SECURITY: PROD deployment is only allowed from MAIN
 # ============================================================
@@ -19,6 +19,66 @@ if ($Branch -ne 'main') {
 Write-Host "Git branch verified: $Branch" -ForegroundColor Green
 
 # ============================================================
+# SECURITY: Verify clean Git working tree
+# ============================================================
+
+$GitStatus = @(
+    git -C $ProjectFolder status --porcelain --untracked-files=normal
+)
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to check Git working tree."
+}
+
+if ($GitStatus.Count -gt 0) {
+    Write-Host "Uncommitted changes detected:" -ForegroundColor Red
+    $GitStatus | ForEach-Object { Write-Host $_ }
+
+    throw "PROD deployment blocked! Commit or discard local changes first."
+}
+
+Write-Host "Git working tree verified: CLEAN" -ForegroundColor Green
+
+
+# ============================================================
+# SECURITY: Verify local MAIN matches origin/main
+# ============================================================
+
+Write-Host "Checking origin/main..." -ForegroundColor Cyan
+
+git -C $ProjectFolder fetch origin main --quiet
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to fetch origin/main. PROD deployment blocked."
+}
+
+$LocalCommit = (git -C $ProjectFolder rev-parse main).Trim()
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to determine local main commit."
+}
+
+$RemoteCommit = (git -C $ProjectFolder rev-parse refs/remotes/origin/main).Trim()
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to determine origin/main commit."
+}
+
+if ($LocalCommit -ne $RemoteCommit) {
+    throw @"
+PROD deployment blocked!
+
+Local main and origin/main are different.
+
+Local : $LocalCommit
+Remote: $RemoteCommit
+
+Commit and push your changes, or pull the latest main.
+"@
+}
+
+Write-Host "Git synchronization verified: MAIN = ORIGIN/MAIN" -ForegroundColor Green
+
+
+# ============================================================
 # Load shared configuration
 # ============================================================
 $ConfigFile = Join-Path $PSScriptRoot 'BC-Config.ps1'
@@ -37,6 +97,11 @@ if (-not $ProdEnvironments -or @($ProdEnvironments).Count -eq 0) {
 # Deploy-BC-Admin.ps1 reads the secret from the process environment.
 $env:BC_CLIENT_SECRET = $ClientSecret
 $ClientSecret = $null
+
+# Restore app.json unless all selected deployments succeed.
+$originalJson = $null
+$versionChanged = $false
+$deploymentSucceeded = $false
 
 try {
     # ============================================================
@@ -206,6 +271,7 @@ try {
             $appJson |
                 ConvertTo-Json -Depth 100 |
                 Set-Content -LiteralPath $appJsonPath -Encoding UTF8
+            $versionChanged = $true
 
             Write-Host "Compiling $appName $newVersion..."
             & $compiler.FullName `
@@ -219,11 +285,7 @@ try {
             Write-Host "Compilation successful: $appFile"
         }
         catch {
-            [IO.File]::WriteAllText(
-                $appJsonPath,
-                $originalJson,
-                [Text.UTF8Encoding]::new($false)
-            )
+            # Outer finally restores app.json if it was changed.
             throw
         }
     }
@@ -257,6 +319,12 @@ try {
             -PollSeconds $PollSeconds `
             -ErrorAction Stop
 
+        if (-not $?) {
+            throw 'Deploy-BC-Admin.ps1 reported a PowerShell error.'
+        }
+
+        # Success assumes Deploy-BC-Admin.ps1 throws for any failed environment.
+        $deploymentSucceeded = $true
         Write-Host ''
         Write-Host '=========================================='
         Write-Host " $appName - PROD deployment completed successfully"
@@ -270,5 +338,21 @@ try {
     }
 }
 finally {
-    Remove-Item Env:\BC_CLIENT_SECRET -ErrorAction SilentlyContinue
+    try {
+        if ($versionChanged -and -not $deploymentSucceeded) {
+            [IO.File]::WriteAllText(
+                $appJsonPath,
+                $originalJson,
+                [Text.UTF8Encoding]::new($false)
+            )
+            Write-Host 'Deployment was not fully successful: app.json restored.' -ForegroundColor Yellow
+        }
+        elseif ($versionChanged -and $deploymentSucceeded) {
+            Write-Host 'Deployment successful: new app.json version retained.' -ForegroundColor Green
+            Write-Host 'Remember to commit and push app.json before the next PROD deployment.' -ForegroundColor Yellow
+        }
+    }
+    finally {
+        Remove-Item Env:\BC_CLIENT_SECRET -ErrorAction SilentlyContinue
+    }
 }
