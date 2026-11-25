@@ -9,7 +9,7 @@ codeunit 50500 "Reconciliation Generate Data"
     var
         ReconciliationParmBuffer: Record "Reconciliation Parm Buffer";
     BEGIN
-
+        debuglog.AddLog('ZZZZ', '');
         IF ISNULLGUID(Rec.GUID) THEN
             EXIT;
 

@@ -167,7 +167,7 @@ report 50500 "Reconciliation Generate Data"
     var
         SessionId: Integer;
     begin
-        DebugLog.AddLog('XXX', '');
+        DebugLog.AddLog('XXX', companyName);
         if not StartSession(
             SessionId,
             Codeunit::"Reconciliation Generate Data",
