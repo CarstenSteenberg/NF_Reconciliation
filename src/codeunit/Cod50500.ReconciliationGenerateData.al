@@ -697,18 +697,19 @@ codeunit 50500 "Reconciliation Generate Data"
         GLEntry: Record "G/L Entry";
     //GeneralLedgerSetup: Record "General Ledger Setup";
     BEGIN
-        //<NF> #6231548  Blackline IC Partner filer fra NAV
+        DebugLog.AddLog('A', CopyStr(p_GLAccount.GetFilters(), 1, 2000));
+        Commit();
 
-        //TEST
-        //GLAccount.SETRANGE("No.",'934510');
+        if not p_GLAccount.FindSet() then begin
+            DebugLog.AddLog('NO RECORDS', '');
+            Commit();
+            exit;
+        end;
 
-        debuglog.AddLog('A', copystr(p_GLAccount.GETFILTERS, 1, 2000));
-        IF NOT p_GLAccount.Findset() THEN
-            EXIT;
+        DebugLog.AddLog('B', Format(p_GLAccount.Count()));
+        Commit();
 
-        debuglog.AddLog('B', copystr(p_GLAccount.GETFILTERS, 1, 2000));
-
-        //GeneralLedgerSetup.GET();
+        GeneralLedgerSetup.get;
 
         i := 0;
         CLEAR(BTReconGLOutboundEntry);
