@@ -10,21 +10,32 @@ codeunit 50500 "Reconciliation Generate Data"
         ReconciliationParmBuffer: Record "Reconciliation Parm Buffer";
     BEGIN
         DebugLog.AddLog('START', CompanyName());
-        Commit();
-
         DebugLog.AddLog('GUID', Format(Rec.GUID));
+        DebugLog.AddLog('Rec Temporary', Format(Rec.IsTemporary()));
+
+        ReconciliationParmBuffer.Reset();
+
+        DebugLog.AddLog(
+            'Total Records',
+            Format(ReconciliationParmBuffer.Count()));
+
+        ReconciliationParmBuffer.SetRange(GUID, Rec.GUID);
+
+        DebugLog.AddLog(
+            'GUID Filter',
+            ReconciliationParmBuffer.GetFilters());
+
+        DebugLog.AddLog(
+            'Filtered Records',
+            Format(ReconciliationParmBuffer.Count()));
+
         Commit();
 
-        IF ISNULLGUID(Rec.GUID) THEN
-            EXIT;
+        if not ReconciliationParmBuffer.FindSet() then
+            Error('No records found for GUID %1.', Rec.GUID);
 
-        ReconciliationParmBuffer.SETRANGE(GUID, Rec.GUID);
-        DebugLog.AddLog('GUID_Filter', reconciliationParmBuffer.GetFilters);
-        commit();
-        IF NOT ReconciliationParmBuffer.Findset() THEN
-            EXIT;
-
-        debuglog.AddLog('XXXXX', '');
+        DebugLog.AddLog('XXXXX', 'Records found');
+        Commit();
 
         GeneralLedgerSetup.Get();
 

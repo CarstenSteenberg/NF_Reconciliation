@@ -169,6 +169,8 @@ report 50500 "Reconciliation Generate Data"
         TimeoutAt: DateTime;
     begin
         DebugLog.AddLog('XXX', companyName);
+        DebugLog.AddLog('Caller GUID', Format(ReconciliationParmBuffer.GUID));
+        DebugLog.AddLog('Caller Temporary', Format(ReconciliationParmBuffer.IsTemporary()));
         commit();
 
         if not StartSession(
