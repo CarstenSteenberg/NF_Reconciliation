@@ -34,6 +34,8 @@ report 50500 "Reconciliation Generate Data"
                 if GuiAllowed() then
                     Window.Open(BatchInfoLbl);
 
+                ReconciliationParmBuffer.DeleteAll();
+
                 if GuiAllowed() then
                     FillOutParmBufferManual()
                 else
