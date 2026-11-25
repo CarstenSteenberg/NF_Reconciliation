@@ -38,9 +38,15 @@ codeunit 50500 "Reconciliation Generate Data"
         Commit();
 
         GeneralLedgerSetup.Get();
+        DebugLog.AddLog('GL Setup', 'After Get');
+        Commit();
 
         REPEAT
-            DebugLog.AddLog('XXXXX', format(ReconciliationParmBuffer."Extraction Type"));
+            DebugLog.AddLog(
+        'Extraction START',
+        Format(ReconciliationParmBuffer."Extraction Type"));
+
+            Commit();
 
             CASE ReconciliationParmBuffer."Extraction Type" OF
                 ReconciliationParmBuffer."Extraction Type"::BlackLine_NF_BlackLine_Account_Items:
