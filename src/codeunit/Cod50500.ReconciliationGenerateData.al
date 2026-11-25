@@ -697,8 +697,15 @@ codeunit 50500 "Reconciliation Generate Data"
         GLEntry: Record "G/L Entry";
     //GeneralLedgerSetup: Record "General Ledger Setup";
     BEGIN
-        DebugLog.AddLog('A', CopyStr(p_GLAccount.GetFilters(), 1, 2000));
-        Commit();
+        if p_ReconParmBuffer."Extraction Type" = p_ReconParmBuffer."Extraction Type"::BlackLine_IC_PnL then begin
+            DebugLog.AddLog('PnL Account Count', Format(p_GLAccount.Count()));
+            DebugLog.AddLog('PnL Filter Length', Format(StrLen(p_GLAccount.GetFilters())));
+
+            if p_GLAccount.FindLast() then
+                DebugLog.AddLog('PnL Last Account', p_GLAccount."No.");
+
+            Commit();
+        end;
 
         if not p_GLAccount.FindSet() then begin
             DebugLog.AddLog('NO RECORDS', '');
