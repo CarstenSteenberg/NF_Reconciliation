@@ -70,7 +70,11 @@ codeunit 50500 "Reconciliation Generate Data"
                 ReconciliationParmBuffer."Extraction Type"::BlackLine_IC_INT:
                     Extract_IC_INT(ReconciliationParmBuffer);
                 ReconciliationParmBuffer."Extraction Type"::BlackLine_IC_PnL:
-                    Extract_IC_Pnl(ReconciliationParmBuffer);
+                    begin
+                        DebugLog.AddLog('Extraction START__', Format(ReconciliationParmBuffer."Extraction Type"));
+                        Commit();
+                        Extract_IC_Pnl(ReconciliationParmBuffer);
+                    end;
             END;
         UNTIL ReconciliationParmBuffer.Next() = 0;
     end;
@@ -894,6 +898,9 @@ codeunit 50500 "Reconciliation Generate Data"
     BEGIN
         //<NF> #6231548  Blackline IC Partner filer fra NAV
         CLEAR(GLAccount);
+        DebugLog.AddLog('Extract_IC_Pnl_1', '');
+        Commit();
+
         GLAccount.SETFILTER("No.", '1..255999|265000..265999|281000..281999|285000..285999|295000..295999|' +
                                   '360000..369998|375000..375999|385000..385999|395000..395999|' +
                                   '405000..405999|410000..410999|415000..499999|' +
@@ -903,6 +910,9 @@ codeunit 50500 "Reconciliation Generate Data"
                                   //'702000..702999|775010');
                                   '702000..702999|775010&<>205210&<>205215');
         //</NF> #7658430  FW: Mapping 205210 og 205215
+
+        DebugLog.AddLog('Extract_IC_Pnl_2', '');
+        Commit();
 
         Extract_IC(p_ReconParmBuffer, GLAccount);
         //</NF> #6231548  Blackline IC Partner filer fra NAV
