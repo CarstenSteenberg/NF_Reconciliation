@@ -166,8 +166,11 @@ report 50500 "Reconciliation Generate Data"
     local procedure GenerateDataPerCompany(CompanyName: Text[30])
     var
         SessionId: Integer;
+        TimeoutAt: DateTime;
     begin
         DebugLog.AddLog('XXX', companyName);
+        commit();
+
         if not StartSession(
             SessionId,
             Codeunit::"Reconciliation Generate Data",
@@ -176,10 +179,16 @@ report 50500 "Reconciliation Generate Data"
         then
             Error(JobDidNotExecuteErr, CompanyName);
 
-        while true do begin
+        TimeoutAt := CurrentDateTime() + (2 * 60 * 1000);
+
+        while IsSessionActive(SessionId) do begin
+            if CurrentDateTime() >= TimeoutAt then
+                Error(
+                    'Reconciliation data generation timed out in company %1. Session ID: %2.',
+                    CompanyName,
+                    SessionId);
+
             Sleep(1000);
-            if not IsSessionActive(SessionId) then
-                exit;
         end;
     end;
 
