@@ -3,7 +3,7 @@ codeunit 50500 "Reconciliation Generate Data"
     TableNo = "Reconciliation Parm Buffer";
 
     var
-        DebugLog: Record "Debug Log";
+    //DebugLog: Record "Debug Log";
 
     trigger OnRun()
     var
@@ -655,22 +655,17 @@ codeunit 50500 "Reconciliation Generate Data"
         i: Integer;
         GL_Account_Int: Integer;
         GLEntry: Record "G/L Entry";
-    //GeneralLedgerSetup: Record "General Ledger Setup";
+        GeneralLedgerSetup: Record "General Ledger Setup";
     BEGIN
-        if p_ReconParmBuffer."Extraction Type" = p_ReconParmBuffer."Extraction Type"::BlackLine_IC_PnL then begin
-            DebugLog.AddLog('PnL Account Count', Format(p_GLAccount.Count()));
-            DebugLog.AddLog('PnL Filter Length', Format(StrLen(p_GLAccount.GetFilters())));
+        //<NF> #6231548  Blackline IC Partner filer fra NAV
 
-            if p_GLAccount.FindLast() then
-                DebugLog.AddLog('PnL Last Account', p_GLAccount."No.");
-
-            Commit();
-        end;
+        //TEST
+        //GLAccount.SETRANGE("No.",'934510');
 
         IF NOT p_GLAccount.Findset() THEN
             EXIT;
 
-        GeneralLedgerSetup.get;
+        GeneralLedgerSetup.GET();
 
         i := 0;
         CLEAR(BTReconGLOutboundEntry);
@@ -678,11 +673,7 @@ codeunit 50500 "Reconciliation Generate Data"
             i := BTReconGLOutboundEntry."Entry No.";
 
         REPEAT
-            if p_ReconParmBuffer."Extraction Type" = p_ReconParmBuffer."Extraction Type"::BlackLine_IC_PnL then begin
-                DebugLog.AddLog('PnL Account START', p_GLAccount."No.");
-                Commit();
-            end;
-
+            //Write_Debug_Info(p_GLAccount.GETFILTERS);
             CLEAR(GLEntry);
             GLEntry.SETCURRENTKEY("G/L Account No.", "Posting Date");
             GLEntry.SETRANGE("G/L Account No.", p_GLAccount."No.");
@@ -694,17 +685,11 @@ codeunit 50500 "Reconciliation Generate Data"
             ELSE
                 GLEntry.SETRANGE("Posting Date", CALCDATE('-CM', WorkDate()), CALCDATE('CM', WorkDate()));
 
-            if p_ReconParmBuffer."Extraction Type" = p_ReconParmBuffer."Extraction Type"::BlackLine_IC_PnL then Begin
-                DebugLog.AddLog('PnL G/L Entry', CopyStr(StrSubstNo('Count: %1 | Filters: %2', GLEntry.Count(), GLEntry.GetFilters()), 1, 2000));
-                Commit();
-            end;
-
             IF GLEntry.Findset() THEN BEGIN
                 REPEAT
                     Send := TRUE;
-
-                    DebugLog.AddLog('G/L Entry START', Format(GLEntry."Entry No."));
-                    Commit();
+                    //Write_Debug_Info(GLEntry.GETFILTERS);
+                    GLEntry.CALCFIELDS("Remaining Amount");
                     if Send then begin
                         Clear(BTReconGLOutboundEntry);
                         BTReconGLOutboundEntry.Init();
@@ -717,7 +702,6 @@ codeunit 50500 "Reconciliation Generate Data"
 
                         BTReconGLOutboundEntry."G/L Account No." := GLEntry."G/L Account No.";
                         BTReconGLOutboundEntry."Posting Date" := GLEntry."Posting Date";
-
                         BTReconGLOutboundEntry.Description := CleanRow(GLEntry.Description);
 
                         BTReconGLOutboundEntry."Currency Code" := GeneralLedgerSetup."LCY Code";
@@ -793,24 +777,15 @@ codeunit 50500 "Reconciliation Generate Data"
                         BTReconGLOutboundEntry."Export Date/Time" :=
                             CurrentDateTime();
 
-
                         BTReconGLOutboundEntry.Insert(true);
-
-                        DebugLog.AddLog('G/L Entry END', Format(GLEntry."Entry No."));
-                        Commit();
-
                     end;
-
 
                 UNTIL GLEntry.Next() = 0;
             END;
-            if p_ReconParmBuffer."Extraction Type" = p_ReconParmBuffer."Extraction Type"::BlackLine_IC_PnL then begin
-                DebugLog.AddLog('PnL Account END', p_GLAccount."No.");
-                Commit();
-            end;
         UNTIL p_GLAccount.Next() = 0;
         //</NF> #6231548  Blackline IC Partner filer fra NAV
     END;
+
 
     local procedure Extract_IC_ACC(p_ReconParmBuffer: Record "Reconciliation Parm Buffer");
     var
@@ -875,11 +850,7 @@ codeunit 50500 "Reconciliation Generate Data"
         GLAccount: Record 15;
         BTReconMasterOutbEntry: Record "Recon Master Outb. Entry";
     BEGIN
-        //<NF> #6231548  Blackline IC Partner filer fra NAV
         CLEAR(GLAccount);
-        DebugLog.AddLog('Extract_IC_Pnl_1', '');
-        Commit();
-
         GLAccount.SETFILTER("No.", '1..255999|265000..265999|281000..281999|285000..285999|295000..295999|' +
                                   '360000..369998|375000..375999|385000..385999|395000..395999|' +
                                   '405000..405999|410000..410999|415000..499999|' +
@@ -888,13 +859,8 @@ codeunit 50500 "Reconciliation Generate Data"
                                   //<NF> #7658430  FW: Mapping 205210 og 205215
                                   //'702000..702999|775010');
                                   '702000..702999|775010&<>205210&<>205215');
-        //</NF> #7658430  FW: Mapping 205210 og 205215
-
-        DebugLog.AddLog('Extract_IC_Pnl_2', '');
-        Commit();
 
         Extract_IC(p_ReconParmBuffer, GLAccount);
-        //</NF> #6231548  Blackline IC Partner filer fra NAV
     END;
 
     local procedure isDirtyText(textValue: Text): Boolean;
