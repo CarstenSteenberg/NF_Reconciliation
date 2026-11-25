@@ -8,7 +8,7 @@ table 50502 "Recon. G/L Outbound Entry"
         field(1; "Entry No."; Integer) { }
         field(10; "G/L Account No."; Code[20]) { TableRelation = "G/L Account"; }
         field(11; "Posting Date"; Date) { ClosingDates = true; }
-        field(12; Description; Text[50]) { }
+        field(12; Description; Text[100]) { }
         field(13; Amount; Decimal) { AutoFormatType = 1; }
         field(14; "IC Partner Code"; Code[20]) { TableRelation = "IC Partner"; }
         field(15; "Remaining Amount"; Decimal) { Editable = false; }

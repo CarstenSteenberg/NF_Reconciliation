@@ -718,8 +718,7 @@ codeunit 50500 "Reconciliation Generate Data"
                         BTReconGLOutboundEntry."G/L Account No." := GLEntry."G/L Account No.";
                         BTReconGLOutboundEntry."Posting Date" := GLEntry."Posting Date";
 
-                        //BTReconGLOutboundEntry.Description := CleanRow(GLEntry.Description);
-                        BTReconGLOutboundEntry.Description := GLEntry.Description;
+                        BTReconGLOutboundEntry.Description := CleanRow(GLEntry.Description);
 
                         BTReconGLOutboundEntry."Currency Code" := GeneralLedgerSetup."LCY Code";
                         BTReconGLOutboundEntry.Amount := GLEntry.Amount;
