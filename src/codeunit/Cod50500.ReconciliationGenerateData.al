@@ -707,14 +707,6 @@ codeunit 50500 "Reconciliation Generate Data"
             Commit();
         end;
 
-        if not p_GLAccount.FindSet() then begin
-            DebugLog.AddLog('NO RECORDS', '');
-            Commit();
-            exit;
-        end;
-
-        DebugLog.AddLog('B', Format(p_GLAccount.Count()));
-        Commit();
 
         GeneralLedgerSetup.get;
 
@@ -724,9 +716,10 @@ codeunit 50500 "Reconciliation Generate Data"
             i := BTReconGLOutboundEntry."Entry No.";
 
         REPEAT
-            //Write_Debug_Info(p_GLAccount.GETFILTERS);
-            debuglog.AddLog('1', copystr(p_GLAccount.GETFILTERS, 1, 2000));
-            Commit();
+            if p_ReconParmBuffer."Extraction Type" = p_ReconParmBuffer."Extraction Type"::BlackLine_IC_PnL then begin
+                DebugLog.AddLog('PnL Account START', p_GLAccount."No.");
+                Commit();
+            end;
 
             CLEAR(GLEntry);
             GLEntry.SETCURRENTKEY("G/L Account No.", "Posting Date");
@@ -747,8 +740,6 @@ codeunit 50500 "Reconciliation Generate Data"
             IF GLEntry.Findset() THEN BEGIN
                 REPEAT
                     Send := TRUE;
-                    debuglog.AddLog('2', copystr(p_GLAccount.GETFILTERS, 1, 2000));
-                    Commit();
 
                     //Write_Debug_Info(GLEntry.GETFILTERS);
                     GLEntry.CALCFIELDS("Remaining Amount");
@@ -847,13 +838,16 @@ codeunit 50500 "Reconciliation Generate Data"
                             Commit();
                         end;
 
-
                         debuglog.AddLog('99', copystr(p_GLAccount.GETFILTERS, 1, 2000));
                         Commit();
                     end;
 
                 UNTIL GLEntry.Next() = 0;
             END;
+            if p_ReconParmBuffer."Extraction Type" = p_ReconParmBuffer."Extraction Type"::BlackLine_IC_PnL then begin
+                DebugLog.AddLog('PnL Account END', p_GLAccount."No.");
+                Commit();
+            end;
         UNTIL p_GLAccount.Next() = 0;
         //</NF> #6231548  Blackline IC Partner filer fra NAV
     END;
