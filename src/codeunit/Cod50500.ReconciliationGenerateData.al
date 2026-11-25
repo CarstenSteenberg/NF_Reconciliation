@@ -707,6 +707,8 @@ codeunit 50500 "Reconciliation Generate Data"
             Commit();
         end;
 
+        IF NOT p_GLAccount.Findset() THEN
+            EXIT;
 
         GeneralLedgerSetup.get;
 
