@@ -9,45 +9,17 @@ codeunit 50500 "Reconciliation Generate Data"
     var
         ReconciliationParmBuffer: Record "Reconciliation Parm Buffer";
     BEGIN
-        DebugLog.AddLog('START', CompanyName());
-        DebugLog.AddLog('GUID', Format(Rec.GUID));
-        DebugLog.AddLog('Rec Temporary', Format(Rec.IsTemporary()));
 
-        ReconciliationParmBuffer.Reset();
+        IF ISNULLGUID(Rec.GUID) THEN
+            EXIT;
 
-        DebugLog.AddLog(
-            'Total Records',
-            Format(ReconciliationParmBuffer.Count()));
-
-        ReconciliationParmBuffer.SetRange(GUID, Rec.GUID);
-
-        DebugLog.AddLog(
-            'GUID Filter',
-            ReconciliationParmBuffer.GetFilters());
-
-        DebugLog.AddLog(
-            'Filtered Records',
-            Format(ReconciliationParmBuffer.Count()));
-
-        Commit();
-
-        if not ReconciliationParmBuffer.FindSet() then
-            Error('No records found for GUID %1.', Rec.GUID);
-
-        DebugLog.AddLog('XXXXX', 'Records found');
-        Commit();
+        ReconciliationParmBuffer.SETRANGE(GUID, Rec.GUID);
+        IF NOT ReconciliationParmBuffer.Findset() THEN
+            EXIT;
 
         GeneralLedgerSetup.Get();
-        DebugLog.AddLog('GL Setup', 'After Get');
-        Commit();
 
         REPEAT
-            DebugLog.AddLog(
-        'Extraction START',
-        Format(ReconciliationParmBuffer."Extraction Type"));
-
-            Commit();
-
             CASE ReconciliationParmBuffer."Extraction Type" OF
                 ReconciliationParmBuffer."Extraction Type"::BlackLine_NF_BlackLine_Account_Items:
                     Extract_Open_Items(ReconciliationParmBuffer);
@@ -70,14 +42,11 @@ codeunit 50500 "Reconciliation Generate Data"
                 ReconciliationParmBuffer."Extraction Type"::BlackLine_IC_INT:
                     Extract_IC_INT(ReconciliationParmBuffer);
                 ReconciliationParmBuffer."Extraction Type"::BlackLine_IC_PnL:
-                    begin
-                        DebugLog.AddLog('Extraction START__', Format(ReconciliationParmBuffer."Extraction Type"));
-                        Commit();
-                        Extract_IC_Pnl(ReconciliationParmBuffer);
-                    end;
+                    Extract_IC_Pnl(ReconciliationParmBuffer);
             END;
         UNTIL ReconciliationParmBuffer.Next() = 0;
     end;
+
 
     var
         GeneralLedgerSetup: Record "General Ledger Setup";
@@ -134,7 +103,6 @@ codeunit 50500 "Reconciliation Generate Data"
             GLEntry.SETRANGE("G/L Account No.", GLAccount."No.");
             GLEntry.SETRANGE("Entry No.", Last_Entry_No + 1, 999999999);
 
-            //Write_Debug_Info('Incr.:'+FORMAT(Last_Incr_Guid));
 
             IF GLEntry.Findset() THEN BEGIN
                 REPEAT
@@ -248,8 +216,6 @@ codeunit 50500 "Reconciliation Generate Data"
             GLEntry.SETRANGE("G/L Account No.", GLAccount."No.");
             GLEntry.SETFILTER("Posting Date", '..%1', CALCDATE('<-CM-1D>', WORKDATE()));
             GLEntry.SETFILTER("Date Filter", '..%1', CALCDATE('<-CM-1D>', WORKDATE()));
-
-            //Write_Debug_Info('Incr.:'+FORMAT(Last_Incr_Guid));
 
             IF GLEntry.Findset() THEN BEGIN
                 REPEAT
@@ -433,9 +399,6 @@ codeunit 50500 "Reconciliation Generate Data"
         IF BTReconMasterOutbEntry.Findlast() THEN
             i := BTReconMasterOutbEntry."Entry No.";
 
-        //Write_Debug_Info('Incr.:'+FORMAT(Last_Incr_Guid));
-        //Write_Debug_Info('Full.:'+FORMAT(Last_Full_Guid));
-
         REPEAT
             Send := TRUE;
             Customer.CALCFIELDS("Net Change", "Net Change (LCY)");
@@ -542,9 +505,6 @@ codeunit 50500 "Reconciliation Generate Data"
         CLEAR(BTReconMasterOutbEntry);
         IF BTReconMasterOutbEntry.Findlast() THEN
             i := BTReconMasterOutbEntry."Entry No.";
-
-        //Write_Debug_Info('Incr.:'+FORMAT(Last_Incr_Guid));
-        //Write_Debug_Info('Full.:'+FORMAT(Last_Full_Guid));
 
         REPEAT
             Send := TRUE;
@@ -743,8 +703,8 @@ codeunit 50500 "Reconciliation Generate Data"
                 REPEAT
                     Send := TRUE;
 
-                    //Write_Debug_Info(GLEntry.GETFILTERS);
-                    //GLEntry.CALCFIELDS("Remaining Amount");
+                    DebugLog.AddLog('G/L Entry START', Format(GLEntry."Entry No."));
+                    Commit();
                     if Send then begin
                         Clear(BTReconGLOutboundEntry);
                         BTReconGLOutboundEntry.Init();
@@ -832,17 +792,14 @@ codeunit 50500 "Reconciliation Generate Data"
                         BTReconGLOutboundEntry."Export Date/Time" :=
                             CurrentDateTime();
 
-                        debuglog.AddLog('3', copystr(p_GLAccount.GETFILTERS, 1, 2000));
 
-                        //BTReconGLOutboundEntry.Insert(true);
-                        IF not BTReconGLOutboundEntry.insert(true) then begin
-                            debuglog.AddLog('Fejl i Insert', format(BTReconGLOutboundEntry."Entry No."));
-                            Commit();
-                        end;
+                        BTReconGLOutboundEntry.Insert(true);
 
-                        debuglog.AddLog('99', copystr(p_GLAccount.GETFILTERS, 1, 2000));
+                        DebugLog.AddLog('G/L Entry END', Format(GLEntry."Entry No."));
                         Commit();
+
                     end;
+
 
                 UNTIL GLEntry.Next() = 0;
             END;
