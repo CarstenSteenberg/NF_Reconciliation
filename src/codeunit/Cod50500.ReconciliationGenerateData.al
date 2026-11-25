@@ -732,8 +732,10 @@ codeunit 50500 "Reconciliation Generate Data"
             ELSE
                 GLEntry.SETRANGE("Posting Date", CALCDATE('-CM', WorkDate()), CALCDATE('CM', WorkDate()));
 
-            if p_ReconParmBuffer."Extraction Type" = p_ReconParmBuffer."Extraction Type"::BlackLine_IC_PnL then
+            if p_ReconParmBuffer."Extraction Type" = p_ReconParmBuffer."Extraction Type"::BlackLine_IC_PnL then Begin
                 DebugLog.AddLog('PnL G/L Entry', CopyStr(StrSubstNo('Count: %1 | Filters: %2', GLEntry.Count(), GLEntry.GetFilters()), 1, 2000));
+                Commit();
+            end;
 
             IF GLEntry.Findset() THEN BEGIN
                 REPEAT
