@@ -744,7 +744,7 @@ codeunit 50500 "Reconciliation Generate Data"
                     Send := TRUE;
 
                     //Write_Debug_Info(GLEntry.GETFILTERS);
-                    GLEntry.CALCFIELDS("Remaining Amount");
+                    //GLEntry.CALCFIELDS("Remaining Amount");
                     if Send then begin
                         Clear(BTReconGLOutboundEntry);
                         BTReconGLOutboundEntry.Init();
