@@ -18,6 +18,8 @@ report 50500 "Reconciliation Generate Data"
                 if not NordiskFilmSetup.Get() then
                     exit;
 
+                DebugLog.AddLog('X', '');
+
                 Clear(BlankGuid);
                 BatchGuid := CreateGuid();
 
@@ -30,6 +32,8 @@ report 50500 "Reconciliation Generate Data"
 
                 if not EnvironmentSetup.FindSet() then
                     exit;
+
+                DebugLog.AddLog('XX', '');
 
                 if GuiAllowed() then
                     Window.Open(BatchInfoLbl);
@@ -558,4 +562,6 @@ report 50500 "Reconciliation Generate Data"
         JobMustRunInMainErr: Label 'This job must be executed in MAIN';
         JobDidNotExecuteErr: Label 'The job did not execute in %1', Comment = '%1 = company name';
         BatchInfoLbl: Label 'Company.: #######1##########\Process.: ##########2##########';
+
+        DebugLog: Record "Debug Log";
 }
