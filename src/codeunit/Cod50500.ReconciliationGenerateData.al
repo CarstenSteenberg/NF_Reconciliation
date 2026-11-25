@@ -834,7 +834,12 @@ codeunit 50500 "Reconciliation Generate Data"
 
                         debuglog.AddLog('3', copystr(p_GLAccount.GETFILTERS, 1, 2000));
 
-                        BTReconGLOutboundEntry.Insert(true);
+                        //BTReconGLOutboundEntry.Insert(true);
+                        IF not BTReconGLOutboundEntry.insert(true) then begin
+                            debuglog.AddLog('Fejl i Insert', format(BTReconGLOutboundEntry."Entry No."));
+                            Commit();
+                        end;
+
 
                         debuglog.AddLog('99', copystr(p_GLAccount.GETFILTERS, 1, 2000));
                         Commit();
