@@ -1,6 +1,10 @@
 codeunit 50500 "Reconciliation Generate Data"
 {
     TableNo = "Reconciliation Parm Buffer";
+
+    var
+        DebugLog: Record "Debug Log";
+
     trigger OnRun()
     var
         ReconciliationParmBuffer: Record "Reconciliation Parm Buffer";
@@ -659,17 +663,20 @@ codeunit 50500 "Reconciliation Generate Data"
         i: Integer;
         GL_Account_Int: Integer;
         GLEntry: Record "G/L Entry";
-        GeneralLedgerSetup: Record "General Ledger Setup";
+    //GeneralLedgerSetup: Record "General Ledger Setup";
     BEGIN
         //<NF> #6231548  Blackline IC Partner filer fra NAV
 
         //TEST
         //GLAccount.SETRANGE("No.",'934510');
 
+        debuglog.AddLog('A', copystr(p_GLAccount.GETFILTERS, 1, 2000));
         IF NOT p_GLAccount.Findset() THEN
             EXIT;
 
-        GeneralLedgerSetup.GET();
+        debuglog.AddLog('B', copystr(p_GLAccount.GETFILTERS, 1, 2000));
+
+        //GeneralLedgerSetup.GET();
 
         i := 0;
         CLEAR(BTReconGLOutboundEntry);
@@ -678,6 +685,7 @@ codeunit 50500 "Reconciliation Generate Data"
 
         REPEAT
             //Write_Debug_Info(p_GLAccount.GETFILTERS);
+            debuglog.AddLog('1', copystr(p_GLAccount.GETFILTERS, 1, 2000));
             CLEAR(GLEntry);
             GLEntry.SETCURRENTKEY("G/L Account No.", "Posting Date");
             GLEntry.SETRANGE("G/L Account No.", p_GLAccount."No.");
@@ -692,6 +700,7 @@ codeunit 50500 "Reconciliation Generate Data"
             IF GLEntry.Findset() THEN BEGIN
                 REPEAT
                     Send := TRUE;
+                    debuglog.AddLog('2', copystr(p_GLAccount.GETFILTERS, 1, 2000));
                     //Write_Debug_Info(GLEntry.GETFILTERS);
                     GLEntry.CALCFIELDS("Remaining Amount");
                     if Send then begin
@@ -780,6 +789,8 @@ codeunit 50500 "Reconciliation Generate Data"
                             p_ReconParmBuffer.GUID;
                         BTReconGLOutboundEntry."Export Date/Time" :=
                             CurrentDateTime();
+
+                        debuglog.AddLog('3', copystr(p_GLAccount.GETFILTERS, 1, 2000));
 
                         BTReconGLOutboundEntry.Insert(true);
                     end;
