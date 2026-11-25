@@ -13,9 +13,13 @@ codeunit 50500 "Reconciliation Generate Data"
         IF ISNULLGUID(Rec.GUID) THEN
             EXIT;
 
+        debuglog.AddLog('XXXX', '');
+
         ReconciliationParmBuffer.SETRANGE(GUID, Rec.GUID);
         IF NOT ReconciliationParmBuffer.Findset() THEN
             EXIT;
+
+        debuglog.AddLog('XXXXX', '');
 
         GeneralLedgerSetup.Get();
 
