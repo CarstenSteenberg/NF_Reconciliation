@@ -719,6 +719,8 @@ codeunit 50500 "Reconciliation Generate Data"
         REPEAT
             //Write_Debug_Info(p_GLAccount.GETFILTERS);
             debuglog.AddLog('1', copystr(p_GLAccount.GETFILTERS, 1, 2000));
+            Commit();
+
             CLEAR(GLEntry);
             GLEntry.SETCURRENTKEY("G/L Account No.", "Posting Date");
             GLEntry.SETRANGE("G/L Account No.", p_GLAccount."No.");
@@ -734,6 +736,8 @@ codeunit 50500 "Reconciliation Generate Data"
                 REPEAT
                     Send := TRUE;
                     debuglog.AddLog('2', copystr(p_GLAccount.GETFILTERS, 1, 2000));
+                    Commit();
+
                     //Write_Debug_Info(GLEntry.GETFILTERS);
                     GLEntry.CALCFIELDS("Remaining Amount");
                     if Send then begin
@@ -826,6 +830,9 @@ codeunit 50500 "Reconciliation Generate Data"
                         debuglog.AddLog('3', copystr(p_GLAccount.GETFILTERS, 1, 2000));
 
                         BTReconGLOutboundEntry.Insert(true);
+
+                        debuglog.AddLog('99', copystr(p_GLAccount.GETFILTERS, 1, 2000));
+                        Commit();
                     end;
 
                 UNTIL GLEntry.Next() = 0;
