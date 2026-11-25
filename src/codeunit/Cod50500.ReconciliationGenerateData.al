@@ -40,6 +40,8 @@ codeunit 50500 "Reconciliation Generate Data"
         GeneralLedgerSetup.Get();
 
         REPEAT
+            DebugLog.AddLog('XXXXX', format(ReconciliationParmBuffer."Extraction Type"));
+
             CASE ReconciliationParmBuffer."Extraction Type" OF
                 ReconciliationParmBuffer."Extraction Type"::BlackLine_NF_BlackLine_Account_Items:
                     Extract_Open_Items(ReconciliationParmBuffer);
