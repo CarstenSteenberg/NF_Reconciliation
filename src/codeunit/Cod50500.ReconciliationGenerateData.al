@@ -1,3 +1,11 @@
+// ===================================================================================================
+// CHANGE LOG
+// ===================================================================================================
+// Date        Case        Description                                                      Release
+// ----------  ----------  -------------------------------------------------                ----------
+// 2026-11-25  xxxxxxx     CR til BC Secure and Centralized OAuth Client Secret Management  2026.xx.xx
+// ===================================================================================================
+
 codeunit 50500 "Reconciliation Generate Data"
 {
     TableNo = "Reconciliation Parm Buffer";
@@ -46,7 +54,6 @@ codeunit 50500 "Reconciliation Generate Data"
             END;
         UNTIL ReconciliationParmBuffer.Next() = 0;
     end;
-
 
     var
         GeneralLedgerSetup: Record "General Ledger Setup";
@@ -103,6 +110,7 @@ codeunit 50500 "Reconciliation Generate Data"
             GLEntry.SETRANGE("G/L Account No.", GLAccount."No.");
             GLEntry.SETRANGE("Entry No.", Last_Entry_No + 1, 999999999);
 
+            //Write_Debug_Info('Incr.:'+FORMAT(Last_Incr_Guid));
 
             IF GLEntry.Findset() THEN BEGIN
                 REPEAT
@@ -216,6 +224,8 @@ codeunit 50500 "Reconciliation Generate Data"
             GLEntry.SETRANGE("G/L Account No.", GLAccount."No.");
             GLEntry.SETFILTER("Posting Date", '..%1', CALCDATE('<-CM-1D>', WORKDATE()));
             GLEntry.SETFILTER("Date Filter", '..%1', CALCDATE('<-CM-1D>', WORKDATE()));
+
+            //Write_Debug_Info('Incr.:'+FORMAT(Last_Incr_Guid));
 
             IF GLEntry.Findset() THEN BEGIN
                 REPEAT
@@ -399,6 +409,9 @@ codeunit 50500 "Reconciliation Generate Data"
         IF BTReconMasterOutbEntry.Findlast() THEN
             i := BTReconMasterOutbEntry."Entry No.";
 
+        //Write_Debug_Info('Incr.:'+FORMAT(Last_Incr_Guid));
+        //Write_Debug_Info('Full.:'+FORMAT(Last_Full_Guid));
+
         REPEAT
             Send := TRUE;
             Customer.CALCFIELDS("Net Change", "Net Change (LCY)");
@@ -505,6 +518,9 @@ codeunit 50500 "Reconciliation Generate Data"
         CLEAR(BTReconMasterOutbEntry);
         IF BTReconMasterOutbEntry.Findlast() THEN
             i := BTReconMasterOutbEntry."Entry No.";
+
+        //Write_Debug_Info('Incr.:'+FORMAT(Last_Incr_Guid));
+        //Write_Debug_Info('Full.:'+FORMAT(Last_Full_Guid));
 
         REPEAT
             Send := TRUE;
@@ -655,13 +671,8 @@ codeunit 50500 "Reconciliation Generate Data"
         i: Integer;
         GL_Account_Int: Integer;
         GLEntry: Record "G/L Entry";
-        GeneralLedgerSetup: Record "General Ledger Setup";
+
     BEGIN
-        //<NF> #6231548  Blackline IC Partner filer fra NAV
-
-        //TEST
-        //GLAccount.SETRANGE("No.",'934510');
-
         IF NOT p_GLAccount.Findset() THEN
             EXIT;
 
@@ -673,7 +684,6 @@ codeunit 50500 "Reconciliation Generate Data"
             i := BTReconGLOutboundEntry."Entry No.";
 
         REPEAT
-            //Write_Debug_Info(p_GLAccount.GETFILTERS);
             CLEAR(GLEntry);
             GLEntry.SETCURRENTKEY("G/L Account No.", "Posting Date");
             GLEntry.SETRANGE("G/L Account No.", p_GLAccount."No.");
@@ -688,7 +698,7 @@ codeunit 50500 "Reconciliation Generate Data"
             IF GLEntry.Findset() THEN BEGIN
                 REPEAT
                     Send := TRUE;
-                    //Write_Debug_Info(GLEntry.GETFILTERS);
+
                     GLEntry.CALCFIELDS("Remaining Amount");
                     if Send then begin
                         Clear(BTReconGLOutboundEntry);
@@ -783,9 +793,7 @@ codeunit 50500 "Reconciliation Generate Data"
                 UNTIL GLEntry.Next() = 0;
             END;
         UNTIL p_GLAccount.Next() = 0;
-        //</NF> #6231548  Blackline IC Partner filer fra NAV
     END;
-
 
     local procedure Extract_IC_ACC(p_ReconParmBuffer: Record "Reconciliation Parm Buffer");
     var
@@ -847,8 +855,8 @@ codeunit 50500 "Reconciliation Generate Data"
 
     local procedure Extract_IC_Pnl(p_ReconParmBuffer: Record "Reconciliation Parm Buffer");
     var
-        GLAccount: Record 15;
-        BTReconMasterOutbEntry: Record "Recon Master Outb. Entry";
+        GLAccount: Record "G/L Account";
+
     BEGIN
         CLEAR(GLAccount);
         GLAccount.SETFILTER("No.", '1..255999|265000..265999|281000..281999|285000..285999|295000..295999|' +
@@ -856,8 +864,6 @@ codeunit 50500 "Reconciliation Generate Data"
                                   '405000..405999|410000..410999|415000..499999|' +
                                   '515000..516999|545000..545999|550000..550999|555000..585999|' +
                                   '619000..632999|636000..636999|642000..642999|646000..646999|' +
-                                  //<NF> #7658430  FW: Mapping 205210 og 205215
-                                  //'702000..702999|775010');
                                   '702000..702999|775010&<>205210&<>205215');
 
         Extract_IC(p_ReconParmBuffer, GLAccount);

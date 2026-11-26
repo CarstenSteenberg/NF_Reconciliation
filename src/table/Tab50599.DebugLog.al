@@ -1,3 +1,5 @@
+namespace NF_Integration.NF_Integration;
+
 table 50599 "Debug Log"
 {
     Caption = 'Debug Log';

@@ -1,3 +1,11 @@
+// ===================================================================================================
+// CHANGE LOG
+// ===================================================================================================
+// Date        Case        Description                                                      Release
+// ----------  ----------  -------------------------------------------------                ----------
+// 2026-11-25  xxxxxxx     CR til BC Secure and Centralized OAuth Client Secret Management  2026.xx.xx
+// ===================================================================================================
+
 report 50500 "Reconciliation Generate Data"
 {
     ApplicationArea = Basic, Suite;
@@ -164,9 +172,7 @@ report 50500 "Reconciliation Generate Data"
     local procedure GenerateDataPerCompany(CompanyName: Text[30])
     var
         SessionId: Integer;
-        TimeoutAt: DateTime;
     begin
-        Commit();
         if not StartSession(
             SessionId,
             Codeunit::"Reconciliation Generate Data",
@@ -175,16 +181,10 @@ report 50500 "Reconciliation Generate Data"
         then
             Error(JobDidNotExecuteErr, CompanyName);
 
-        TimeoutAt := CurrentDateTime() + (2 * 60 * 1000);
-
-        while IsSessionActive(SessionId) do begin
-            if CurrentDateTime() >= TimeoutAt then
-                Error(
-                    'Reconciliation data generation timed out in company %1. Session ID: %2.',
-                    CompanyName,
-                    SessionId);
-
+        while true do begin
             Sleep(1000);
+            if not IsSessionActive(SessionId) then
+                exit;
         end;
     end;
 
@@ -422,7 +422,6 @@ report 50500 "Reconciliation Generate Data"
 
         OutboundData.Insert(true);
 
-        //IntegrationService.AddStatusLog(OutboundData.MessageId, enum::"Status Log Type"::Outbound, DataIsBeingProcessedLbl, enum::IntegrationStatus::Open);
     end;
 
     local procedure CheckIfExecutedToday(BatchName: Text): Boolean
@@ -436,7 +435,6 @@ report 50500 "Reconciliation Generate Data"
         if not NordiskFilmSetup.Get() then
             exit(false);
 
-        //ReconciliationGenerateData.CheckDateStatus(NordiskFilmSetup."Reconciliation Calendar", WorkDate(), Description);
         ReconciliationGenerateData.CheckDateStatus(NordiskFilmSetup."Base Calendar", WorkDate(), Description);
 
         exit(StrPos(UpperCase(Description), UpperCase(BatchName)) <> 0);
@@ -454,7 +452,6 @@ report 50500 "Reconciliation Generate Data"
         BTReconMasterOutbEntry.SetFilter(Type, '%1|%2', BTReconMasterOutbEntry.Type::Bank, BTReconMasterOutbEntry.Type::"G/L Account");
         BTReconMasterOutbEntry.DeleteAll();
 
-        // <NF> #6231548 Blackline IC Partner files from NAV
         ReconciliationParmBuffer.SetRange(GUID, BatchGuid);
         ReconciliationParmBuffer.SetRange("Extraction Type", ReconciliationParmBuffer."Extraction Type"::BlackLine_Customer);
         if ReconciliationParmBuffer.FindFirst() then
@@ -514,7 +511,6 @@ report 50500 "Reconciliation Generate Data"
                         end;
                     end;
             end;
-        // </NF> #6231548 Blackline IC Partner files from NAV
     end;
 
     local procedure CleanUpOldTransData()

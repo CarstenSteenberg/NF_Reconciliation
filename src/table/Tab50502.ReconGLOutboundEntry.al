@@ -1,3 +1,11 @@
+// ===================================================================================================
+// CHANGE LOG
+// ===================================================================================================
+// Date        Case        Description                                                      Release
+// ----------  ----------  -------------------------------------------------                ----------
+// 2026-11-25  xxxxxxx     CR til BC Secure and Centralized OAuth Client Secret Management  2026.xx.xx
+// ===================================================================================================
+
 table 50502 "Recon. G/L Outbound Entry"
 {
     DataPerCompany = false;
@@ -8,6 +16,7 @@ table 50502 "Recon. G/L Outbound Entry"
         field(1; "Entry No."; Integer) { }
         field(10; "G/L Account No."; Code[20]) { TableRelation = "G/L Account"; }
         field(11; "Posting Date"; Date) { ClosingDates = true; }
+        //field(12; Description; Text[50]) { }
         field(12; Description; Text[100]) { }
         field(13; Amount; Decimal) { AutoFormatType = 1; }
         field(14; "IC Partner Code"; Code[20]) { TableRelation = "IC Partner"; }
