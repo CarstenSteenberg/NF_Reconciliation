@@ -1,9 +1,17 @@
+// ===================================================================================================
+// CHANGE LOG
+// ===================================================================================================
+// Date        Case        Description                                                      Release
+// ----------  ----------  -------------------------------------------------                ----------
+// 2026-11-25  xxxxxxx     CR til BC Secure and Centralized OAuth Client Secret Management  2026.xx.xx
+// ===================================================================================================
+
 codeunit 50500 "Reconciliation Generate Data"
 {
     TableNo = "Reconciliation Parm Buffer";
 
     var
-        DebugLog: Record "Debug Log";
+    //DebugLog: Record "Debug Log";
 
     trigger OnRun()
     var
@@ -663,20 +671,12 @@ codeunit 50500 "Reconciliation Generate Data"
         i: Integer;
         GL_Account_Int: Integer;
         GLEntry: Record "G/L Entry";
-    //GeneralLedgerSetup: Record "General Ledger Setup";
+
     BEGIN
-        //<NF> #6231548  Blackline IC Partner filer fra NAV
-
-        //TEST
-        //GLAccount.SETRANGE("No.",'934510');
-
-        debuglog.AddLog('A', copystr(p_GLAccount.GETFILTERS, 1, 2000));
         IF NOT p_GLAccount.Findset() THEN
             EXIT;
 
-        debuglog.AddLog('B', copystr(p_GLAccount.GETFILTERS, 1, 2000));
-
-        //GeneralLedgerSetup.GET();
+        GeneralLedgerSetup.GET();
 
         i := 0;
         CLEAR(BTReconGLOutboundEntry);
@@ -684,8 +684,6 @@ codeunit 50500 "Reconciliation Generate Data"
             i := BTReconGLOutboundEntry."Entry No.";
 
         REPEAT
-            //Write_Debug_Info(p_GLAccount.GETFILTERS);
-            debuglog.AddLog('1', copystr(p_GLAccount.GETFILTERS, 1, 2000));
             CLEAR(GLEntry);
             GLEntry.SETCURRENTKEY("G/L Account No.", "Posting Date");
             GLEntry.SETRANGE("G/L Account No.", p_GLAccount."No.");
@@ -700,8 +698,7 @@ codeunit 50500 "Reconciliation Generate Data"
             IF GLEntry.Findset() THEN BEGIN
                 REPEAT
                     Send := TRUE;
-                    debuglog.AddLog('2', copystr(p_GLAccount.GETFILTERS, 1, 2000));
-                    //Write_Debug_Info(GLEntry.GETFILTERS);
+
                     GLEntry.CALCFIELDS("Remaining Amount");
                     if Send then begin
                         Clear(BTReconGLOutboundEntry);
@@ -790,15 +787,12 @@ codeunit 50500 "Reconciliation Generate Data"
                         BTReconGLOutboundEntry."Export Date/Time" :=
                             CurrentDateTime();
 
-                        debuglog.AddLog('3', copystr(p_GLAccount.GETFILTERS, 1, 2000));
-
                         BTReconGLOutboundEntry.Insert(true);
                     end;
 
                 UNTIL GLEntry.Next() = 0;
             END;
         UNTIL p_GLAccount.Next() = 0;
-        //</NF> #6231548  Blackline IC Partner filer fra NAV
     END;
 
     local procedure Extract_IC_ACC(p_ReconParmBuffer: Record "Reconciliation Parm Buffer");
@@ -861,23 +855,18 @@ codeunit 50500 "Reconciliation Generate Data"
 
     local procedure Extract_IC_Pnl(p_ReconParmBuffer: Record "Reconciliation Parm Buffer");
     var
-        GLAccount: Record 15;
-        BTReconMasterOutbEntry: Record "Recon Master Outb. Entry";
+        GLAccount: Record "G/L Account";
+
     BEGIN
-        //<NF> #6231548  Blackline IC Partner filer fra NAV
         CLEAR(GLAccount);
         GLAccount.SETFILTER("No.", '1..255999|265000..265999|281000..281999|285000..285999|295000..295999|' +
                                   '360000..369998|375000..375999|385000..385999|395000..395999|' +
                                   '405000..405999|410000..410999|415000..499999|' +
                                   '515000..516999|545000..545999|550000..550999|555000..585999|' +
                                   '619000..632999|636000..636999|642000..642999|646000..646999|' +
-                                  //<NF> #7658430  FW: Mapping 205210 og 205215
-                                  //'702000..702999|775010');
                                   '702000..702999|775010&<>205210&<>205215');
-        //</NF> #7658430  FW: Mapping 205210 og 205215
 
         Extract_IC(p_ReconParmBuffer, GLAccount);
-        //</NF> #6231548  Blackline IC Partner filer fra NAV
     END;
 
     local procedure isDirtyText(textValue: Text): Boolean;
