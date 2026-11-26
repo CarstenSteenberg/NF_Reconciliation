@@ -3,7 +3,7 @@
 // ===================================================================================================
 // Date        Case        Description                                                      Release
 // ----------  ----------  -------------------------------------------------                ----------
-// 2026-11-25  xxxxxxx     CR til BC Secure and Centralized OAuth Client Secret Management  2026.xx.xx
+// 2026-11-25  xxxxxxx     BlackLine – Error in IC P&L Data Extraction                      2026.xx.xx
 // ===================================================================================================
 
 codeunit 50500 "Reconciliation Generate Data"
