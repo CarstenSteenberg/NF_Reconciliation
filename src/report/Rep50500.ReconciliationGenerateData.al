@@ -166,7 +166,6 @@ report 50500 "Reconciliation Generate Data"
         SessionId: Integer;
         TimeoutAt: DateTime;
     begin
-
         Commit();
         if not StartSession(
             SessionId,
